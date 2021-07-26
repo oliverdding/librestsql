@@ -107,7 +107,7 @@ class EsEngine(Engine):
 if __name__ == '__main__':
     #测试
     request={
-            "from": "db.book",
+            "from": "db.cars",
             "time": {
                 "column": 'sold',
                 "begin": "",
