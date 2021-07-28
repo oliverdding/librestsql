@@ -1,3 +1,3 @@
-from restsql.config import setting
+from restsql.config import file_setting
 
-setting.init_db_config()
+file_setting.init_db_config()

@@ -1,7 +1,7 @@
-from restsql.config import setting,db_setting
+from restsql.config import file_setting,db_setting
 
 
-setting.init_db_config()
+file_setting.init_db_config()
 print(db_setting.db_configs)
 print('ok')
 print(db_setting.db_configs.config['tables']['source2'])
