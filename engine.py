@@ -1,12 +1,28 @@
 # encoding:utf-8
+
+# 空行
+# 空格
+# 函数名混杂驼峰/下划线
+# Python 规范文档
+# SQL 拼接尽量避免，有 SQL 注入风险
+# 测试使用单独的文件，不写在 main 里面
+# 代码按时提交，推荐每天提交一次
+# 主干开发，master 拉分支合master
+# Django & librestsql 代码逻辑区分清楚，Django 可替换为其他 Web 框架
+
+
+
 import json
 import  time
+
+
 class Engine():
     def parse(self):
         """
         :return: 返回数据库具体查询语句
         """
         raise NotImplementedError
+
 class EsEngine(Engine):
     """
     主要采用SQL方式实现降低学习成本，无法实现的需求混合DSL查询
@@ -14,7 +30,7 @@ class EsEngine(Engine):
     def __init__(self,query_dict):
         self.index=query_dict["from"].split(".")[1]
         self.select_list=query_dict["select"]
-        self.time=query_dict["time"]
+        self.time = query_dict["time"]
         self.groupby_list=query_dict["group"]
         self.where_list=query_dict["where"]
         pass
