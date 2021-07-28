@@ -1,0 +1,19 @@
+table:
+  source1:
+    k: table1
+    v: table2
+  source2:
+    k: table3
+db:
+  source1:
+    dbname: xinan
+    host: localhost
+    port: 3306
+    username: root
+    password: zhang
+    type: sql
+  source2:
+    dbname: test3
+    host: localhost
+    port: 9200
+    type: es
