@@ -1,8 +1,8 @@
 from django.http import HttpResponse
 import json
 import re
-from restsql.datasource.es import esexec_module
-from restsql.datasource.sql import sqlexec_module
+from restsql.datasource.es import es_entry
+from restsql.datasource.sql import sql_entry
 from restsql.config import utils
 
 def testSourceView(request):
@@ -47,9 +47,9 @@ def querySourceView(request):
     typeparam = db['type']
 
     if typeparam == 'es':
-        client = esexec_module.EsClient(db)
+        client = es_entry.EsClient(db)
     elif typeparam == 'sql':
-        client = sqlexec_module.SQLClient(db)
+        client = sql_entry.SQLClient(db)
     else:
         return HttpResponse("false")
     table = utils.get_table_bydbname(from_sub[0])
