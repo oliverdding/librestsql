@@ -1,8 +1,6 @@
 from django.http import HttpResponse
 import json
 import re
-from restsql.datasource.es import es_entry
-from restsql.datasource.sql import sql_entry
 from restsql.config import utils
 from restsql.datasource import query_client
 

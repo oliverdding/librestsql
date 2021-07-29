@@ -1,5 +1,6 @@
 # {
-#     'db_settings':{
+#     'db_setting':{
+#         "dbname":xxx
 #         "host":xxx
 #         "password":xxx
 #
@@ -19,7 +20,7 @@
 import re
 
 from restsql.config import utils
-from restsql.datasource.es import es_entry
+from restsql.datasource.es import restClient
 from restsql.datasource.sql import sql_entry
 
 
@@ -49,8 +50,8 @@ class Client:
         #     return False
         typeparam = db['type']
         if typeparam == 'es':
-            client = es_entry.EsClient(self.source)
-            self._queryresult=client.es_query(query,self.pid)
+            client = restClient(query,self.source)
+            self._queryresult=client.query()
         elif typeparam == 'sql':
             client = sql_entry.SQLClient(self.source)
             self._queryresult=client.sql_query(query,self.pid)

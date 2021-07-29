@@ -34,7 +34,7 @@ class Query:
     def get_sql_test(self):
         restsql = {'from': 'xxx',
                    'select': [{'column': 'username', 'alias': 'name'}, {'column': 'password', 'alias': 'password'}],
-                   'where': [], 'group': [], 'limit': 5}
+                   'where': [], 'group': [], 'limit': 1}
         sql = 'select {} from {} '
         select_sql = ""
         select = restsql.get('select', [])
