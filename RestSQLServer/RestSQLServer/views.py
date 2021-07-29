@@ -4,6 +4,8 @@ import re
 from restsql.datasource.es import es_entry
 from restsql.datasource.sql import sql_entry
 from restsql.config import utils
+from restsql.datasource import query_client
+
 
 def testSourceView(request):
     # 假设传输from参数示例
@@ -19,7 +21,7 @@ def testSourceView(request):
         p = re.compile(r'\W+')
         from_sub = p.split(body)
 
-        datasource = utils.get_datasource_byfromsub(from_sub[0])
+        datasource = utils.get_datasource_bysource(from_sub[0])
         if datasource:  # 查找 里面包含的db 是否已经在文件里面
             return HttpResponse('ok')
     return HttpResponse('false')
@@ -31,33 +33,22 @@ def searchSourceView(request):
 
 def querySourceView(request):
     pid = request.COOKIES.get('pid')
-    restsql = json.loads(request.body)
-    print(restsql)
+    restquery = json.loads(request.body)
+    print(restquery)
 
-    from_item = restsql['from']
-    p = re.compile(r'\W+')  # test.table ，分离出单词
-    from_sub = p.split(from_item)
-    # 之后加入错误处理，考虑不符合规则
-    print(list)
+    from_item = restquery['from']
+    # 这里可以加错误处理
 
-    db = utils.get_datasource_byfromsub(from_sub[0])
-    if not db:
-        return HttpResponse("false")
+    client = query_client.Client(from_item, pid)
 
-    typeparam = db['type']
-
-    if typeparam == 'es':
-        client = es_entry.EsClient(db)
-    elif typeparam == 'sql':
-        client = sql_entry.SQLClient(db)
-    else:
-        return HttpResponse("false")
-    table = utils.get_table_bydbname(from_sub[0])
-    real_tablename = utils.get_realname_bytable(table, from_sub[1])
     # 返回结果
-    result = client.sql_query(real_tablename, restsql, {},pid)
-    print(result)
-    return HttpResponse(result.to_json())
+    flag = client.query(restquery)
+    if flag:
+        result = client.result
+        return HttpResponse('ok')
+
+    return HttpResponse('false')
+
 
 def helloword(request):
     return HttpResponse('ok')

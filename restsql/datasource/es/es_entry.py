@@ -15,12 +15,11 @@ import pandas as pd
 
 
 class Query:
-    def __init__(self, query, database, table, pid):
+    def __init__(self, query, database,pid):
         self.query = query
         self.database = database
         self.pid = pid
         self._result = None
-        self.tablename = table  # 指定表名
         # self.table=self._get_table() 如果有orm需要指定对象,进行使用
 
     # def _get_table(self): 有orm需要生成model，使用
@@ -43,8 +42,8 @@ class EsClient:
         print("init es client")
 
     # 这里为暴露的接口，供进行调用！！！  统一返回dateframe
-    def es_query(self, table, querysql,table_struct, pid):  # 数据源是固定的，但是table可能有变化
-        query = Query(querysql, self.datasource, table, pid)
+    def es_query(self,querysql, pid):  # 数据源是固定的，但是table可能有变化
+        query = Query(querysql, self.datasource,pid)
         query.es_do_query()
 
         # result= query.result #获取对象

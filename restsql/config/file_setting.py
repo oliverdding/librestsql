@@ -11,7 +11,10 @@ from restsql.config.db_setting import db_configs
         'port':'3306'
         'schema': 'xxx' //如 postgre里面的public
         'type': 'xxx' //es 或 sql
+        'black': []
+        
     }
+    
 }
 {
     name:{
@@ -50,10 +53,35 @@ def init_db_config():
         for temp_table_name in temp_table_names:
             # 此处可以加上错误处理
             table[temp_table_name] = temp_tables[db_name][temp_table_name]
-        db_configs.addtable(db_name, table)
+        db_configs.add_table(db_name, table)
     # 如果不需要进行错误处理，可以直接  tables=configjson.get('table')
 
     # 下面可以考虑是是不是还有表结构指定什么的可以
+    tables_struct = configjson.get('tablestruct', {})
+    print(tables_struct)
+    print("打印总的表结构")
+    for dbname, tabletruct in tables_struct.items():
+        for name in tabletruct.keys():
+            valuedict = tabletruct.get(name, None)
+            print(valuedict)
+            print("打印结构")
+            if valuedict:
+                db_configs.add_tablestruct(dbname, name, valuedict)
+            print(db_configs.get_tablestruct_byname(dbname, name))
+            print("打印获取结构")
+
+    # 获取黑名单字段
+    black_columns = configjson.get('blackcolumn', {})
+    print(black_columns)
+    for dbname, tables in black_columns.items():
+        for name in tables.keys():
+            valuearray = tables.get(name, None)
+            print(valuearray)
+            print("打印黑名单字段结构")
+            if valuearray:
+                db_configs.add_blackcolumn(dbname, name, valuearray)
+            print(db_configs.get_blackcolumn_bytablename(dbname,name))
+            print("打印黑名单字段获取")
 
     # 构成一个db配置json
     for name in dbs_name:
@@ -66,7 +94,20 @@ def init_db_config():
                                             values.get('username', None),
                                             values.get('password', None),
                                             values.get('type', None))
-        db_configs.adddb(name, temp_dict)
+        db_configs.add_db(name, temp_dict)
+
+        # 获取黑名单表
+        blackTables = configjson.get('blacktable', None)
+        print(blackTables)
+        print("打印黑名单表")
+        for name in blackTables.keys():
+            valuearray = blackTables.get(name, [])
+            print(valuearray)
+            print("打印黑名单具体arr")
+            if valuearray:
+                db_configs.add_tableblack(name, valuearray)
+            print(db_configs.get_tableblack_byname(name))
+            print("打印黑名单具体获取")
     fp.close()
 
 
