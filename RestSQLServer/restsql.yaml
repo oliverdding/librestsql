@@ -38,7 +38,7 @@ db:
     dbname: testdjango
     host: 127.0.0.1
     port: 5432
-    username: root
+    username: postgres
     password: zhang23785491
     type: sql
   source2:
