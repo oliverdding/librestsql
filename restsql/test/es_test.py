@@ -1,6 +1,6 @@
 # encoding=utf-8
 from restsql.restClient import restClient
-from restsql.config.db_setting import *
+from restsql.config.settings import *
 if __name__ == '__main__':
     query_dict = {
             "from": "es_test.cars",

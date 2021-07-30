@@ -1,5 +1,5 @@
 import yaml
-from restsql.config.db_setting import db_configs
+from restsql.config.settings import db_configs
 
 """
 {
