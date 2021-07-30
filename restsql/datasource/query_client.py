@@ -27,7 +27,7 @@ from restsql.datasource.sql import sql_entry
 class Client:
 
     def __init__(self, fromsub, pid):
-        self.source = {'db_setting': {}, 'table': {}, 'blacktables': []}
+        self.source = {'db_setting': {}, 'table': [], 'blacktables': []}
         self.pid = pid
         self.from_sub = fromsub
         self._queryresult = None
@@ -45,16 +45,18 @@ class Client:
 
         self.source['blacktables'] = blacktables
         self.source['db_setting'] = db
-        self.source['table'][real_tablename] = self.get_temptable(sub[0], real_tablename)
+        self.source['table'].append(self.get_temptable(sub[0], real_tablename))
         # if blacktables and blacktables.count(real_tablename):
         #     return False
         typeparam = db['type']
         if typeparam == 'es':
-            client = restClient(query,self.source)
-            self._queryresult=client.query()
+            client = restClient.restClient(query, self.source)
+            self._queryresult = client.query()
+            print(self.result)  # 尝试打印临时结果
         elif typeparam == 'sql':
             client = sql_entry.SQLClient(self.source)
-            self._queryresult=client.sql_query(query,self.pid)
+            self._queryresult = client.sql_query(query, self.pid)
+            print(self.result)
         elif typeparam == 'druid':
             a = 1
         else:

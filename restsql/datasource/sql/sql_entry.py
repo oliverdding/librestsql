@@ -1,55 +1,23 @@
 import pandas as pd
-from . import sql_engine as engine
+from . import Postgre
 
 
 class Query:
-    def __init__(self, query, database,pid):
+    def __init__(self, query, database, table, table_struct, pid):
         self.query = query
         self.database = database
         self.pid = pid
         self._result = None
+        self.tablename = table  # 指定表名
         # self.table=self._get_table() 如果有orm需要指定对象,进行使用
 
     # def _get_table(self): 有orm需要生成model，使用
 
     def sql_do_query(self):
-        a = self.query
-        self._result = "this is a result"
-        print(self.database)
-        # print(self._result + ":  " + self.tablename + ": ")
-        print("检测是否在sql有配置")
-        print(self.database)
-
-        sql = self.get_sql_test()
-        self.sql_test(sql)
         # 调用self.query进行操作 ,然后把字符串结果进行存储到  _result里面进去
-
-    def sql_test(self, sql):
-        conn = engine.init_db(self.database)
-        rows=engine.exec_sql(sql, conn)
-        for row in rows:
-            print(row)
-        engine.exit_db(conn)
-
-    def get_sql_test(self):
-        restsql = {'from': 'xxx',
-                   'select': [{'column': 'username', 'alias': 'name'}, {'column': 'password', 'alias': 'password'}],
-                   'where': [], 'group': [], 'limit': 1}
-        sql = 'select {} from {} '
-        select_sql = ""
-        select = restsql.get('select', [])
-        for item in select:
-            select_sql += item.get('column', "")
-            if item.get('alias', None):
-                select_sql += " as " + item.get('alias')
-            select_sql += ','
-
-        print(select_sql)
-
-        sql = sql.format(select_sql[0:-1], 'public."Model1_testuser"')
-
-        print(sql)
-        return sql
+        # 接受的query为json字符串
+        print(self.database)
+        self._result = Postgre.query(self.database, self.query, self.pid)
 
     @property  # 调用方法名，不用加()
     def result(self):
@@ -64,8 +32,13 @@ class SQLClient:
     def set_datasource(self, datasource):
         self.datasource = datasource
 
-    def sql_query(self,querysql,pid):  # 数据源是固定的，但是table可能有变化
-        query = Query(querysql, self.datasource, pid)
+    def sql_query(self, querysql, pid):  # 数据源是固定的，但是table可能有变化
+        if len(self.datasource['table']) < 1:
+            return False  # 举个例子，当用户没有传入表名的时候
+
+        tablename = self.datasource['table'][0]['tablename']
+        tablestruct = self.datasource['table'][0]['struct']
+        query = Query(querysql, self.datasource, tablename, tablestruct, pid)
         query.sql_do_query()
 
         # result = query.result  # 获取对象
