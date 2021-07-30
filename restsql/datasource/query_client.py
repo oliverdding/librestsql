@@ -5,8 +5,8 @@
 #         "password":xxx
 #
 #     }
-#     'tables':{
-#             'tablename':{
+#     'table':[
+#             {
 #                 'tablename': xxx
 #                 'struct': {
 #                     'column1': xxx(int)
@@ -14,7 +14,7 @@
 #                 }
 #                 'blackcolumn': []
 #              }
-#    }
+#    ]
 #     'blacktables':[]
 # }
 import re
