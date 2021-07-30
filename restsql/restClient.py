@@ -8,6 +8,7 @@ class restClient:
     restsql主要服务类，服务器端调用，输入请求协议，输出DataFrame
     内部实现：
     根据请求协议识别查询的数据源，通过调用相应数据源的Client服务类，输出DataFrame
+    TODO 封装了请求协议还未修改
     """
 
     def __init__(self, query_dict):
