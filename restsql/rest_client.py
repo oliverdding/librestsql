@@ -1,5 +1,5 @@
 # encoding=utf-8
-from restsql.datasource.esClient import *
+from restsql.datasource.es_client import *
 from restsql.config.settings import *
 
 

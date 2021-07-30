@@ -1,5 +1,5 @@
 # encoding=utf-8
-from restsql.restClient import restClient
+from restsql.rest_client import restClient
 from restsql.config.settings import *
 if __name__ == '__main__':
     query_dict = {

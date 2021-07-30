@@ -1,12 +1,13 @@
 # encoding=utf-8
 
+
 __all__ = ['Client']
 
 
 class Client:
     def __init__(self, database):
         self.dataBase = database
-        raise NotImplementedError
+        # raise NotImplementedError
 
     def query(self, query):
         """
@@ -16,7 +17,8 @@ class Client:
         raise NotImplementedError
         pass
 
-class druidClient(Client):
+
+class DruidClient(Client):
     """
     TODO druid数据源实现
     """

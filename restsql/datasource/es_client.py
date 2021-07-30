@@ -1,4 +1,4 @@
-from druidClient import Client
+from druid_client import Client
 import pandas as pd
 
 _all_ = ['EsClient']
