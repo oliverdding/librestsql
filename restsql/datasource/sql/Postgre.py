@@ -67,10 +67,10 @@ def query(database, query_dic, p_id):
     print(db_setting['password'])
     print(db_setting['host'])
     print(db_setting['port'])
-    # conn = psycopg2.connect(database=db_setting['dbname'], user=db_setting['username'],
-    #                         password=db_setting['password'], host=db_setting['host'], port=db_setting['port'])
-    conn = psycopg2.connect(database="testdjango", user="postgres", password="zhang23785491", host="127.0.0.1",
-                            port="5432")
+    conn = psycopg2.connect(database=db_setting['dbname'], user=db_setting['username'],
+                            password=db_setting['password'], host=db_setting['host'], port=db_setting['port'])
+    # conn = psycopg2.connect(database="testdjango", user="postgres", password="zhang23785491", host="127.0.0.1",
+    #                         port="5432")
     tablename = database['table'][0]['tablename']  # 这里的tablename要在这里获取
     if tablename:
         sql = to_sql(query_dic, 'public."'+tablename+'"', '\''+p_id+'\'' ) # 将Json格式的restsql协议转为普通sql语句,  注意有一个Public,需要处理
