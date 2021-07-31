@@ -1,4 +1,7 @@
 class PostgreDatabase:
+    """
+    作为postgre模板类
+    """
     def __init__(self, db_name, user, password, host, port):
         self.db_name = db_name
         self.user = user
@@ -8,10 +11,13 @@ class PostgreDatabase:
 
 
 class DruidDatabase:
-    def __init__(self, host, port, db_name):
+    def __init__(self, host, port):
+        """
+        :host Druid数据源地址
+        :port Druid 数据源端口
+        """
         self.host = host
         self.host = port
-        self.db_name = db_name
 
 
 class Query:
@@ -29,6 +35,9 @@ class Query:
 
 class Client:
     def __init__(self, database):
+        """
+        :param database:指定数据库配置对象
+        """
         self.dataBase = database
         raise NotImplementedError
 

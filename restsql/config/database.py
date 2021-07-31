@@ -21,7 +21,7 @@ class DataBase:
                  tables=None, black_tables=None, black_fields=None):
         """
         db_setting初始化器。
-        :param name: 该db_setting的name。用于区分db_setting.
+        :param name: 该配置数据源的名称
         :param db_type: 数据库类型。由EnumDataBase枚举类定义。
         :param host: 数据库host。
         :param db_name: 数据库名。
@@ -29,9 +29,9 @@ class DataBase:
         :param user: 用户名。用于连接数据库。
         :param password: 密码。用户连接数据库。
         :param schema: 模式。用于pgsql数据源。
-        :param tables: 表。用户自定义相关表。是继承自Table类的类的list。
-        :param black_tables: 黑名单表。使用自动维护时有用。是string的list。
-        :param black_fields: 黑名单字段。使用自动维护时有用。是字典，结构为{'表名': ['需忽视字段名', ], }
+        :param tables: 表。作为list对象。
+        :param black_tables: 黑名单表。是string的list。
+        :param black_fields: 黑名单字段。
         """
         if tables is None:
             tables = []
@@ -69,6 +69,7 @@ class DataBase:
                 host=host,
                 port=port
             )
+
         elif db_type == EnumDataBase.ES:
             self.db = Elasticsearch(host)
         elif db_type == EnumDataBase.DRUID:

@@ -19,7 +19,6 @@ class Client:
         if dbtype == EnumDataBase.ES:
             client = EsClient(datasource)
             self._result = client.query(querysql)
-            self._result = client.query()
         elif dbtype == EnumDataBase.PG:
             client = PgClient(datasource)
             self._result = client.query(querysql)

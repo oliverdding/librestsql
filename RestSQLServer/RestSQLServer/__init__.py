@@ -1,4 +1,4 @@
-from . import mapping
+from . import load
 
-mapping.init_json()
+load.init_json()
 

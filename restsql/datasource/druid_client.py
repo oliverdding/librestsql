@@ -15,13 +15,11 @@ class Query:
         from_sub = self.restquery['from'].split('.', 1)
         if len(from_sub) <2:
             raise RuntimeError("false 'from' column ")
-        # TODO错误处理
         # tablename = "\"wikipedia\""
         tablename = from_sub[1]  # 这个只需要一个表名就行
         if tablename in self.database.black_tables:
             raise RuntimeError("the table in the blacktables")
 
-        # TODO错误处理，比如这个是不是数组，或者有无字段，及其错误
         select_dict = self.restquery['select']
         where_dict = self.restquery["where"]
         group_dict = self.restquery['group']
@@ -33,13 +31,11 @@ class Query:
         select_sql = self.parse_select(select_dict, time)
         sql = "SELECT {} FROM \"{}\"".format(select_sql, tablename)
 
-        if where_dict:
+        if where_dict or time:
             sql += self.parse_where(where_dict, time)
-        group_sql = self.parse_group()
         if group_dict:
             sql += self.parse_group()
 
-        # 开始执行
         cur = self.database.db.cursor()
         print(sql)
         cur.execute(sql)
@@ -75,7 +71,6 @@ class Query:
                 raise RuntimeError("the time error")
             templist.append(time['column'] + " between \'" + time['begin'] + "\' and \'" + time['end'] + "\'")
 
-        # TODO是否要进行条件查询，有四则运算的
         for i in range(0, len(where_dict)):
             if len(where_dict[i].get('column', "")) > 0 and len(where_dict[i].get('op', "")) > 0 and len(
                     where_dict[i].get('column', "")) > 0:
