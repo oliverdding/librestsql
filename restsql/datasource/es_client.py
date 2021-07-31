@@ -1,6 +1,6 @@
-import json
 import pandas as pd
-from restsql.config.dbsetting import *
+
+from restsql.config.model import Client
 
 _all_ = ['EsClient']
 
@@ -163,20 +163,17 @@ class EsQuery:
         return self.dsl
 
 
-class EsClient:
+class EsClient(Client):
     """
     Es数据源服务类，供restSqlClient调用
     """
 
-    def __init__(self, datasource):
-        """
-        :param datasource: 传入的Database对象，可以进行连接操作
-        """
-        self.datasource = datasource
+    def __init__(self, database):
+        super().__init__(database)
         print("init es client")
 
     # 这里为暴露的接口，供进行调用！！！  统一返回dateframe
-    def es_query(self, query_dict, index):
+    def query(self, query_dict):
         """
         :param query_dict: 请求协议字典
         :return: 返回DataFrame
@@ -187,10 +184,9 @@ class EsClient:
         alias_dict[query_dict["time"]["column"]] = "time"
         results = []
         esQuery = EsQuery(query_dict)
-        # index=query_dict["from"].split(".")[1]
+        index = query_dict["from"].split(".")[1]
         dsl = esQuery.parse()
-
-        raw_result = self.datasource.db.search(index=index, body=dsl)
+        raw_result = self.dataBase.db.search(index=index, body=dsl)
         if 'aggs' in raw_result or 'aggregations' in raw_result:
             if raw_result.get('aggregations'):
                 results = raw_result['aggregations']['groupby']['buckets']

@@ -1,32 +1,31 @@
 import re
 
-from restsql.datasource.es import restClient
-from restsql.datasource.postgre import sql_entry
-from restsql.datasource.druid import druid_client
-from restsql.config.dbsetting import db_settings
+from restsql.config.database import db_settings, EnumDataBase
+from restsql.datasource.pg_client import PgClient
+from restsql.datasource.es_client import EsClient
+from restsql.datasource.druid_client import DruidClient
 
 
 class Client:
 
-    def __init__(self, query, pid):
-        self.pid = pid
-        self.querysql = query
+    def __init__(self):
         self._result = None
 
-    def query(self):
+    def query(self, querysql):
         p = re.compile(r'\W+')  # test.table ，分离出单词
-        sub = p.split(self.querysql['from'])
+        sub = p.split(querysql['from'])
         datasource = db_settings.get_by_name(sub[0])
         dbtype = datasource.db_type
-        if dbtype == 'Elasticsearch':
-            client = restClient.restClient(self.querysql, datasource)
+        if dbtype == EnumDataBase.ES:
+            client = EsClient(datasource)
+            self._result = client.query(querysql)
             self._result = client.query()
-        elif dbtype == 'PostgreSQL':
-            client = sql_entry.SQLClient(datasource)
-            self._result = client.sql_query(self.querysql, self.pid)
-        elif dbtype == 'Druid':
-            client = druid_client.DruidClient(datasource)
-            self._result = client.druid_query(self.querysql, self.pid)
+        elif dbtype == EnumDataBase.PG:
+            client = PgClient(datasource)
+            self._result = client.query(querysql)
+        elif dbtype == EnumDataBase.DRUID:
+            client = DruidClient(datasource)
+            self._result = client.druid_query(querysql)
         else:
             return False
         return True

@@ -14,17 +14,16 @@ def searchSourceView(request):
 
 
 def querySourceView(request):
-    pid = request.COOKIES.get('pid')
     restquery = json.loads(request.body)
     print(restquery)
 
     from_item = restquery['from']
     # 这里可以加错误处理
 
-    client = restclient.Client(restquery, pid)
+    client = restclient.Client()
 
     # 返回结果
-    flag = client.query()
+    flag = client.query(restquery)
     # if flag:
     #     result = client.result
     #     return HttpResponse('ok')

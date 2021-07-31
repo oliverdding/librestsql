@@ -2,14 +2,14 @@
 import json
 import logging
 
-from restsql.config.dbsetting import EnumDataBase, db_settings  # 注意dbsetting模块的导入的方式
+from restsql.config.database import EnumDataBase, db_settings
 from restsql.config.table import NumberField, StringField, BoolField, IntField, Table
 
 logger = logging.getLogger("restsql_model")
 
 table_map = {}
 
-
+# 注意dbsetting模块的导入的方式
 def get_db_type(db_type):
     if db_type == "PG":
         return EnumDataBase.PG

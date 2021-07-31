@@ -1,7 +1,9 @@
 from elasticsearch import Elasticsearch
+from pydruid.db import connect
 
 from restsql.config.model import *
-from pydruid.db import connect
+
+__all__ = ['EnumDataBase', 'DataBase', 'db_settings']
 
 
 class EnumDataBase:
@@ -10,7 +12,7 @@ class EnumDataBase:
     DRUID = 'Druid'
 
 
-class DbSetting:
+class DataBase:
     """
     db_setting类。存储各个数据源的配置信息，用于连接、peewee查询。这里应该用builder模式但是py下的构造着模式有些奇怪，就改动了下。
     """
@@ -95,7 +97,7 @@ class _DbSettings:
         :return: None
         """
         for db_setting in db_setting_tuple:
-            if not isinstance(db_setting, DbSetting):
+            if not isinstance(db_setting, DataBase):
                 raise RuntimeError("DbSetting needed!")
             self._db_settings[db_setting.name] = db_setting
 
@@ -116,8 +118,8 @@ class _DbSettings:
         :param black_fields: 黑名单字段。使用自动维护时有用。是字典，结构为{'表名': ['需忽视字段名', ], }
         :return: None
         """
-        self._db_settings[name] = DbSetting(name, db_type, host, db_name, port, user, password, schema, tables,
-                                            black_tables, black_fields)
+        self._db_settings[name] = DataBase(name, db_type, host, db_name, port, user, password, schema, tables,
+                                           black_tables, black_fields)
 
     def remove_by_name(self, name):
         """
