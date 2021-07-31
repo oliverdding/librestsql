@@ -1,5 +1,7 @@
 # encoding=utf-8
 from elasticsearch import Elasticsearch
+import psycopg2
+from pydruid.db import connect
 
 __all__ = ['EnumDataBase', 'DataBase', 'db_configs']
 
@@ -59,20 +61,21 @@ class DataBase:
         else:
             raise RuntimeError("Dict of table_name: [field_name] needed.")
 
-        if db_type == EnumDataBase.PG:
-            if db_name is None or port is None or user is None or password is None:
+    def connect_db(self):
+        if self.db_type == EnumDataBase.PG:
+            if self.db_name is None or self.port is None or self.user is None or self.password is None:
                 raise RuntimeError("Empty elements in PgSQL")
-            """
-            针对sql数据源，传入数据源对象（ORM或自定义数据库类）
-            """
-        elif db_type == EnumDataBase.MYSQL:
-            if db_name is None or port is None or user is None or password is None:
+            return psycopg2.connect(database=self.db_name, user=self.user,
+                                    password=self.password, host=self.host, port=self.port)
+        elif self.db_type == EnumDataBase.MYSQL:
+            if self.db_name is None or self.port is None or self.user is None or self.password is None:
                 raise RuntimeError("Empty elements in PgSQL")
-            """
-            针对sql数据源，传入数据源对象（ORM或自定义数据库类
-            """
-        elif db_type == EnumDataBase.ES:
-            self.db = Elasticsearch(host + ":" + str(port))
+        elif self.db_type == EnumDataBase.DRUID:
+            if self.host is None or self.port is None:
+                raise RuntimeError("Empty elements in Druid")
+            return connect(host=self.host, port=self.port)
+        elif self.db_type == EnumDataBase.ES:
+            return Elasticsearch(self.host + ":" + str(self.port))
 
 
 """
@@ -90,7 +93,7 @@ class _DbConfigs:
         """
         :return: 返回所有Database类的名字
         """
-        return self.configs['db_settings'].keys()
+        return self.configs.keys()
 
     def put(self, *Database_tuple):
         """
@@ -110,8 +113,8 @@ class _DbConfigs:
     def add_db(self, name, db_type, host, db_name=None, port=None, user=None, password=None, schema=None,
                tables=None, black_tables=None, black_fields=None):
         # 后期这里判断空处理
-        self.configs[name] = DbSetting(name, db_type, host, db_name, port, user, password, schema, tables,
-                                       black_tables, black_fields)
+        self.configs[name] = DataBase(name, db_type, host, db_name, port, user, password, schema, tables,
+                                      black_tables, black_fields)
 
     def remove_by_dbname(self, dbname):
         if name in self.configs:

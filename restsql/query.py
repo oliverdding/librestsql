@@ -13,6 +13,6 @@ class Query:
         self.From = query_dict["from"]
         self.time_dict = query_dict["time"]
         self.select_list = query_dict["select"]
-        self.where_list = query_dict["Where"]
+        self.where_list = query_dict["where"]
         self.group_list = query_dict["group"]
         self.limit = query_dict["limit"]

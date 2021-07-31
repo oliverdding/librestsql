@@ -1,29 +1,11 @@
+# encoding=utf-8
+
+from restsql.config.settings import DataBase, EnumDataBase
 from restsql.datasource.pg_client import PgClient
+from restsql.query import Query
 import json
 
-
-class DataBase:
-    db_name = "test"
-    host = "localhost"
-    port = "5432"
-    user = "postgres"
-    password = "12345"
-
-
-class Query:
-    def __init__(self, query_dict):
-        """
-        :param query_dict: 请求协议字典
-        """
-        self.From = query_dict["from"]
-        self.time_dict = query_dict["time"]
-        self.select_list = query_dict["select"]
-        self.where_list = query_dict["where"]
-        self.group_list = query_dict["group"]
-        self.limit = query_dict["limit"]
-
-
-json_sql = '''
+data_json = '''
 {
     "from":"test.sale",
     "time":{
@@ -34,7 +16,7 @@ json_sql = '''
     },
     "select":[
       {
-        "column":"=price",
+        "column":"price",
         "alias":"平均金额",
         "metric":"avg"
       },
@@ -54,7 +36,8 @@ json_sql = '''
      "limit":1000
   }
 '''
-database = DataBase()
-query = Query(json.loads(json_sql))
-pg = PgClient(database)
-print(pg.query(query))
+database = DataBase(name='test', db_type=EnumDataBase.PG, port='5432',db_name='test',
+                    host='localhost', user='postgres', password='12345')
+query = Query(json.loads(data_json))
+client = PgClient(database)
+print(client.query(query))

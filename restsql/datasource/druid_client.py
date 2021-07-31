@@ -1,17 +1,21 @@
 # encoding=utf-8
 
+from restsql.config.settings import EnumDataBase
+from restsql.datasource.until import to_sql, get_columns
+from sqlalchemy.exc import CompileError
+import pandas as pd
 
 __all__ = ['Client']
 
 
 class Client:
     def __init__(self, database):
-        self.dataBase = database
+        self.database = database
         # raise NotImplementedError
 
-    def query(self, query):
+    def query(self, que):
         """
-        :param query: 请求协议的封装类Query对象
+        :param que: 请求协议的封装类Query对象
         :return: DataFrame格式数据
         """
         raise NotImplementedError
@@ -20,6 +24,17 @@ class Client:
 
 class DruidClient(Client):
     """
-    TODO druid数据源实现
+    Druid数据源
     """
-    pass
+
+    def query(self, que):
+        sql = to_sql(que, EnumDataBase.DRUID)
+        try:
+            conn = self.database.connect_db()
+            curs = conn.cursor()
+            curs.execute(sql)
+        except CompileError as e:
+            raise e
+        res = curs.fetchall()
+        columns = get_columns(que)
+        return pd.DataFrame(data=res, columns=columns)
