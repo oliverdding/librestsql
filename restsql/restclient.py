@@ -2,6 +2,7 @@ import re
 
 from restsql.datasource.es import restClient
 from restsql.datasource.postgre import sql_entry
+from restsql.datasource.druid import druid_client
 from restsql.config.dbsetting import db_settings
 
 
@@ -16,14 +17,16 @@ class Client:
         p = re.compile(r'\W+')  # test.table ，分离出单词
         sub = p.split(self.querysql['from'])
         datasource = db_settings.get_by_name(sub[0])
-        if type == 'Elasticsearch':
-            client = restClient.restClient(self.querysql,datasource)
+        dbtype = datasource.db_type
+        if dbtype == 'Elasticsearch':
+            client = restClient.restClient(self.querysql, datasource)
             self._result = client.query()
-        elif type == 'PostgreSQL':
+        elif dbtype == 'PostgreSQL':
             client = sql_entry.SQLClient(datasource)
-            self._result = client.sql_query(self.query, self.pid)
-        elif type == 'Druid':
-            a = 1
+            self._result = client.sql_query(self.querysql, self.pid)
+        elif dbtype == 'Druid':
+            client = druid_client.DruidClient(datasource)
+            self._result = client.druid_query(self.querysql, self.pid)
         else:
             return False
         return True

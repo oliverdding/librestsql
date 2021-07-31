@@ -21,13 +21,13 @@ def querySourceView(request):
     from_item = restquery['from']
     # 这里可以加错误处理
 
-    client = restclient.Client(from_item, pid)
+    client = restclient.Client(restquery, pid)
 
     # 返回结果
-    flag = client.query(restquery)
-    if flag:
-        result = client.result
-        return HttpResponse('ok')
+    flag = client.query()
+    # if flag:
+    #     result = client.result
+    #     return HttpResponse('ok')
 
     return HttpResponse('false')
 

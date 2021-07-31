@@ -1,6 +1,7 @@
 from elasticsearch import Elasticsearch
 
-from restsql.config.model import PostgreDatabase
+from restsql.config.model import *
+from pydruid.db import connect
 
 
 class EnumDataBase:
@@ -68,6 +69,11 @@ class DbSetting:
             )
         elif db_type == EnumDataBase.ES:
             self.db = Elasticsearch(host)
+        elif db_type == EnumDataBase.DRUID:
+            if db_name is None or port is None or host is None:
+                raise RuntimeError("Empty elements in Druid")
+            #             使用sql方式使用
+            self.db = connect(host=host, port=port, path='/druid/v2/sql', scheme='http')
 
 
 class _DbSettings:
