@@ -5,9 +5,11 @@ import logging
 from restsql.config.database import EnumDataBase, db_settings
 from restsql.config.table import NumberField, StringField, BoolField, IntField, Table
 
-logger = logging.getLogger("restsql_model")
+__all__ = ['init_json']
+logger = logging.getLogger("restsql_load")
 
 table_map = {}
+
 
 # 注意dbsetting模块的导入的方式
 def get_db_type(db_type):

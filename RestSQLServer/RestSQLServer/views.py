@@ -1,12 +1,16 @@
-from django.http import HttpResponse
-import json
+import logging
 
+from django.http import HttpResponse
+from django.views.decorators.http import require_GET
+import json
 from restsql import restclient
+from .util import ExceptionEnum
+from .util import ResponseModel
+from .util import frame_parse_obj
 
 
 def testSourceView(request):
-
-    return HttpResponse('false')
+    return HttpResponse('pk')
 
 
 def searchSourceView(request):
@@ -29,6 +33,23 @@ def querySourceView(request):
     #     return HttpResponse('ok')
 
     return HttpResponse('false')
+
+
+@require_GET
+def apiquery(request):
+    if request.body is None:
+        return HttpResponse(ResponseModel.failure_response('error'))
+    restquery = json.loads(request.body)
+    return_format = request.GET.get('format', None)
+    logging.DEBUG(restquery)
+    if not restquery.get('from', None):
+        return HttpResponse(ResponseModel.failure_response('error', ExceptionEnum))
+    client = restclient.Client()
+    result = client.query(restquery)
+    if not result:
+        return HttpResponse(ResponseModel.failure_response('error', 'unknown error'))
+    resp = frame_parse_obj(result, return_format)
+    return HttpResponse(json.dumps(resp))
 
 
 def helloword(request):

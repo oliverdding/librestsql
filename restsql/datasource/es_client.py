@@ -1,6 +1,6 @@
-import pandas as pd
-
 from restsql.config.model import Client
+import pandas as pd
+import json
 
 _all_ = ['EsClient']
 
@@ -10,9 +10,9 @@ class EsQuery:
     将请求协议转译为Es—DSL查询语句
     """
 
-    def __init__(self, query_dict):
+    def __init__(self, query):
         """
-        :param query_dict: 请求协议的字典
+        :param query: 请求协议封装对象
         格式：{
               "from":"",
               "time":{
@@ -30,13 +30,13 @@ class EsQuery:
                 .....
         """
         self.limit = 1000
-        if "limit" in query_dict:
-            self.limit = query_dict["limit"]
-        self.index = query_dict["from"].split(".")[1]
-        self.select_list = query_dict["select"]
-        self.time = query_dict["time"]
-        self.groupby_list = query_dict["group"]
-        self.where_list = query_dict["where"]
+        if query.limit is not None:
+            self.limit = query.limit
+        self.index = query.From.split(".")[1]
+        self.select_list = query.select_list
+        self.time = query.time_dict
+        self.group_list = query.group_list
+        self.where_list = query.where_list
         self.dsl = {
             'size': 1000,  # default
             'query': {
@@ -56,7 +56,7 @@ class EsQuery:
                     },
                     'aggs': {}
                 }
-            }
+            },
         }
         self.dsl_where = self.dsl['query']['bool']['must']
         self.dsl_composite = self.dsl['aggs']['groupby']['composite']['sources']
@@ -64,7 +64,7 @@ class EsQuery:
 
     def _parse_fields(self):
         if self.time["interval"] is None or self.time["interval"] == "":
-            if len(self.groupby_list) == 0:
+            if len(self.group_list) == 0:
                 self.dsl['_source']['includes'].append(self.time["column"])
         for s in self.select_list:
             self.dsl['_source']['includes'].append(s["column"])
@@ -109,22 +109,22 @@ class EsQuery:
             else:
                 raise SyntaxError('cat not support op: {0}, field: {1}'.format(filter["op"], filter["column"]))
             # 请求协议输入必须为yyyy-MM-dd之类的格式且必须补足位数
-            if self.time["begin"] is not None and self.time["begin"] != "":
-                self.dsl_where.append({
-                    'range': {
-                        self.time["column"]: {'gte': self.time["begin"]}
-                    }
-                })
-            if self.time["end"] is not None and self.time["end"] != "":
-                self.dsl_where.append({
-                    'range': {
-                        self.time["column"]: {'lte': self.time["end"]}
-                    }
-                })
-            if len(self.dsl_where) == 0:
-                del self.dsl["query"]
+        if self.time["begin"] is not None and self.time["begin"] != "":
+            self.dsl_where.append({
+                'range': {
+                    self.time["column"]: {'gte': self.time["begin"]}
+                }
+            })
+        if self.time["end"] is not None and self.time["end"] != "":
+            self.dsl_where.append({
+                'range': {
+                    self.time["column"]: {'lte': self.time["end"]}
+                }
+            })
+        if len(self.dsl_where) == 0:
+            del self.dsl["query"]
 
-    def _parse_groupby(self):
+    def _parse_group(self):
         func_map = {'count': 'value_count', 'sum': 'sum', 'avg': 'avg', 'max': 'max', 'min': 'min',
                     'count_distinct': 'cardinality'}
         for s in self.select_list:
@@ -138,18 +138,21 @@ class EsQuery:
         pass
 
     def _parse_composite(self):
-        for g in self.groupby_list:
-            sources_dict = {}
-            sources_dict[g] = {"terms": {"field": g + ".keyword"}}
+        for g in self.group_list:
+            sources_dict = {g: {"terms": {"field": g + ".keyword"}}}
             self.dsl_composite.append(sources_dict)
         if self.time["interval"] is not None and self.time["interval"] != "":
-            sources_dict = {}
-            sources_dict[self.time["column"]] = {"date_histogram": {"field": self.time["column"]}}
+            sources_dict = {self.time["column"]: {"date_histogram": {"field": self.time["column"]}}}
             sources_dict[self.time["column"]]["date_histogram"]["interval"] = self.time["interval"]
-            sources_dict[self.time["column"]]["date_histogram"]["format"] = "yyyy-MM-dd hh:mm:ss"
+            sources_dict[self.time["column"]]["date_histogram"]["format"] = "yyyy-MM-dd HH:mm:ss"
             self.dsl_composite.append(sources_dict)
         if len(self.dsl_composite) == 0:
             del self.dsl["aggs"]
+        else:
+            self.dsl["size"] = 0
+            self.dsl['aggs']['groupby']['composite']['size'] = self.limit
+            if self.time["interval"] is None or self.time["interval"] == "":
+                raise Exception("time字段必须指定interval")
 
     def parse(self):
         """
@@ -159,7 +162,7 @@ class EsQuery:
         self._parse_where()
         self._parse_composite()
         self._parse_fields()
-        self._parse_groupby()
+        self._parse_group()
         return self.dsl
 
 
@@ -173,29 +176,25 @@ class EsClient(Client):
         print("init es client")
 
     # 这里为暴露的接口，供进行调用！！！  统一返回dateframe
-    def query(self, query_dict):
-        """
-        :param query_dict: 请求协议字典
-        :return: 返回DataFrame
-        """
+    def query(self, query):
         alias_dict = {}
-        for s in query_dict["select"]:
+        for s in query.select_list:
             alias_dict[s["column"]] = s["alias"]
-        alias_dict[query_dict["time"]["column"]] = "time"
+        alias_dict[query.time_dict["column"]] = "time"
         results = []
-        esQuery = EsQuery(query_dict)
-        index = query_dict["from"].split(".")[1]
+        esQuery = EsQuery(query)
+        index = query.From.split(".")[1]
         dsl = esQuery.parse()
-        raw_result = self.dataBase.db.search(index=index, body=dsl)
+        raw_result = self.dataBase.connect_db().search(index=index, body=dsl)
         if 'aggs' in raw_result or 'aggregations' in raw_result:
             if raw_result.get('aggregations'):
                 results = raw_result['aggregations']['groupby']['buckets']
             else:
                 results = raw_result['agg']['groupby']['buckets']
             for it in results:
-                it["time"] = it["key"][query_dict["time"]["column"]]
+                it["time"] = it["key"][query.time_dict["column"]]
                 del it['key']
-                del it['doc_count']  # TODO: 暂时没用的一个字段
+                del it['doc_count']
                 for field, value in it.items():
                     if isinstance(value, dict) and 'value' in value:
                         it[field] = value['value']
@@ -209,4 +208,6 @@ class EsClient(Client):
                     else:
                         result[alias_dict[field]] = record[field]
                 results.append(result)
-        return (pd.DataFrame(results))
+        # 关闭连接操作
+        self.dataBase.connect_db().close()
+        return pd.DataFrame(results)
