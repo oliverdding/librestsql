@@ -31,7 +31,13 @@ data_json = '''
         "metric":"count"
       }
     ],
-    "where":[],
+    "where":[
+      {
+       "column":"price",
+       "op": "<=",
+       "value": "100"
+      }
+    ],
     "group":[],
      "limit":1000
   }

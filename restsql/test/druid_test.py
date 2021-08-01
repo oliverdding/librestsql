@@ -12,7 +12,7 @@ data_json = '''
       "column":"__time",
       "begin":"2015-7-20",
       "end":"2017-7-30",
-      "interval":"86400"
+      "interval":"1000"
     },
     "select":[
       {
@@ -23,12 +23,12 @@ data_json = '''
       {
         "column":"commentLength",
         "alias":"评论总字数",
-        "metric":"sum"
+        "metric":"SUM"
       }
     ],
     "where":[],
     "group":[],
-     "limit":1000
+     "limit":100
   }
 '''
 

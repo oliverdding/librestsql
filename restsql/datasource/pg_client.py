@@ -2,7 +2,7 @@
 
 from restsql.datasource.druid_client import Client
 from restsql.config.settings import EnumDataBase
-from restsql.datasource.until import get_columns, to_sql
+from restsql.datasource.util import get_columns, to_sql
 from restsql.query import Query
 import pandas as pd
 import psycopg2

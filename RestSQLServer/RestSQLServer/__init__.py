@@ -1,3 +1,4 @@
-from restsql.config import file_setting
+from . import load
 
-file_setting.init_db_config()
+load.init_json()
+

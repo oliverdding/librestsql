@@ -1,7 +1,7 @@
 # encoding=utf-8
 
 from restsql.config.settings import EnumDataBase
-from restsql.datasource.until import to_sql, get_columns
+from restsql.datasource.util import to_sql, get_columns
 from sqlalchemy.exc import CompileError
 import pandas as pd
 
