@@ -22,6 +22,8 @@ def frame_parse_obj(df, key='json'):
 class ExceptionEnum:
     NullPoint = {"code": "301", "exception": "Null point", "typedesc": "empty point"}
     NoSource = {"code": "302", "exception": "No object specified", "typedesc": "the 'from' field is empty"}
+    RequestMethodError = {"code": "303", "exception": "request method Error",
+                          "typedesc": "the request method must be 'GET' "}
 
 
 class ResponseModel:
@@ -34,10 +36,10 @@ class ResponseModel:
         }
 
     @staticmethod
-    def success_response(data):
+    def success(data):
         resp = ResponseModel('ok', data)
         return resp._result
 
     @staticmethod
-    def failure_response(status, data):
+    def failure(status, data):
         ResponseModel(status, data)

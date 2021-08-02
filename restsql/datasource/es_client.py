@@ -1,4 +1,4 @@
-from restsql.config.model import Client
+from restsql.datasource.druid_client import Client
 import pandas as pd
 import json
 
@@ -143,7 +143,7 @@ class EsQuery:
             self.dsl_composite.append(sources_dict)
         if self.time["interval"] is not None and self.time["interval"] != "":
             sources_dict = {self.time["column"]: {"date_histogram": {"field": self.time["column"]}}}
-            sources_dict[self.time["column"]]["date_histogram"]["interval"] = self.time["interval"]
+            sources_dict[self.time["column"]]["date_histogram"]["interval"] = self.time["interval"]+"s"
             sources_dict[self.time["column"]]["date_histogram"]["format"] = "yyyy-MM-dd HH:mm:ss"
             self.dsl_composite.append(sources_dict)
         if len(self.dsl_composite) == 0:
@@ -171,28 +171,24 @@ class EsClient(Client):
     Es数据源服务类，供restSqlClient调用
     """
 
-    def __init__(self, database):
-        super().__init__(database)
-        print("init es client")
-
-    # 这里为暴露的接口，供进行调用！！！  统一返回dateframe
-    def query(self, query):
+    # 这里为暴露的接口，供进行调用,统一返回dateframe
+    def query(self, que):
         alias_dict = {}
-        for s in query.select_list:
+        for s in que.select_list:
             alias_dict[s["column"]] = s["alias"]
-        alias_dict[query.time_dict["column"]] = "time"
+        alias_dict[que.time_dict["column"]] = "time"
         results = []
-        esQuery = EsQuery(query)
-        index = query.From.split(".")[1]
+        esQuery = EsQuery(que)
+        index = que.From.split(".")[1]
         dsl = esQuery.parse()
-        raw_result = self.dataBase.connect_db().search(index=index, body=dsl)
+        raw_result = self.database.connect_db().search(index=index, body=dsl)
         if 'aggs' in raw_result or 'aggregations' in raw_result:
             if raw_result.get('aggregations'):
                 results = raw_result['aggregations']['groupby']['buckets']
             else:
                 results = raw_result['agg']['groupby']['buckets']
             for it in results:
-                it["time"] = it["key"][query.time_dict["column"]]
+                it["time"] = it["key"][que.time_dict["column"]]
                 del it['key']
                 del it['doc_count']
                 for field, value in it.items():
@@ -209,5 +205,5 @@ class EsClient(Client):
                         result[alias_dict[field]] = record[field]
                 results.append(result)
         # 关闭连接操作
-        self.dataBase.connect_db().close()
+        self.database.connect_db().close()
         return pd.DataFrame(results)

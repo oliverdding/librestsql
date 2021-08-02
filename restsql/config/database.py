@@ -1,6 +1,6 @@
 from elasticsearch import Elasticsearch
 from pydruid.db import connect
-
+from peewee import PostgresqlDatabase
 from restsql.config.model import *
 
 __all__ = ['EnumDataBase', 'DataBase', 'db_settings']
@@ -62,7 +62,7 @@ class DataBase:
         if db_type == EnumDataBase.PG:
             if db_name is None or port is None or user is None or password is None:
                 raise RuntimeError("Empty elements in PgSQL")
-            self.db = PostgreDatabase(
+            self.db = PostgresqlDatabase(
                 db_name,
                 user=user,
                 password=password,

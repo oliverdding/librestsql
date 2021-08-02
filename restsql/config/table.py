@@ -33,9 +33,15 @@ class BoolField(Field):
     pass
 
 
+class TimeField(Field):
+    """
+    时间类型 DateTimeField
+    """
+    pass
+
+
 class Table(object):
     """
     Schema基类
     """
     pass
-
