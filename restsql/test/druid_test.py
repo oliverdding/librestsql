@@ -12,7 +12,7 @@ data_json = '''
       "column":"__time",
       "begin":"2015-7-20",
       "end":"2017-7-30",
-      "interval":"1000"
+      "interval":"1s"
     },
     "select":[
       {
@@ -28,7 +28,7 @@ data_json = '''
     ],
     "where":[],
     "group":[],
-     "limit":100
+     "limit":10000
   }
 '''
 

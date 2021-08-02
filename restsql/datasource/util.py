@@ -2,6 +2,49 @@ from restsql.config.settings import EnumDataBase
 from restsql.query import Query
 
 
+def _pg_bucket(interval):
+    """
+    将RestSql格式的时间间隔转换成秒数返回给pg聚合使用
+    :param interval: RestSql格式的时间间隔
+    :return: 秒数
+    """
+    # 时间单位所对应的秒数
+    time_bucket = {"y": 31557600, "M": 2629800, "w": 604800, "d": 86400,
+                   "h": 3600, "m": 60, "s": 1}
+    # 转换成秒数返回
+    return time_bucket[interval[-1]] * int(interval[:-1])
+
+
+def _druid_bucket(interval):
+    """
+    将RestSql格式的时间间隔转换成Druid支持的格式
+    :param interval: RestSql格式的时间间隔
+    :return: Druid支持的时间间隔格式
+    """
+    time_bucket = {"y": "P?Y", "M": "P?M", "w": "P?W", "d": "P?D",
+                   "h": "PT?H", "m": "PT?M", "s": "PT?S"}
+    return time_bucket[interval[-1]].replace('?', interval[:-1])
+
+
+def _build_bucket(sql_type, interval='1s'):
+    """
+    将RestSql格式的时间间隔转换成对应Sql类型的时间间隔
+    比如1h转换成Druid中的PT1H，PG中的3600（PG全转换成秒数）
+    :param interval: RestSql格式的时间间隔
+    :param sql_type: 数据源类型
+    :return: 对应Sql类型的时间间隔
+    """
+    # 支持的时间单位，分别对应年月周日时分秒
+    rest_bucket = ['y', 'M', 'w', 'd', 'h', 'm', 's']
+    # 若格式不正确抛出异常
+    if interval[-1] not in rest_bucket or not interval[:-1].isdigit():
+        raise RuntimeError('Interval "{}" is not supported'.format(interval))
+    if sql_type == EnumDataBase.PG:
+        return "'{}'".format(_pg_bucket(interval))
+    elif sql_type == EnumDataBase.DRUID:
+        return "'{}'".format(_druid_bucket(interval))
+
+
 def _build_select(select, time, sql_type):
     """
     完成SELECT这一部分的SQL代码转化
@@ -9,18 +52,18 @@ def _build_select(select, time, sql_type):
     :param time: 包含时序处理信息的字典
     :return: SELECT这一部分的SQL代码
     """
-    # 将每次得到的部分sql语句放在一个列表种，最后调用join连接在一起，避免浪费内存
+    # 将每次得到的部分sql语句放在一个列表中，最后调用join连接在一起，避免浪费内存
     sql_list = []
     # 判断时间这一字段是否设置
     if len(time['column']) > 0:
         time_select_sql = ''  # 时间这一字段的SELECT的SQL语句
         # 判断属于什么类型的SQL（比如Druid和Postgre在时间处理上有些许不同）
         if sql_type == EnumDataBase.DRUID:
-            time_select_sql = "SELECT TIME_FLOOR({column}, 'PT{interval}S') AS \"time\"" \
-                                .format(column=time['column'], interval=time['interval'])
+            time_select_sql = 'SELECT TIME_FLOOR("{column}", {bucket}) AS "time"' \
+                .format(column=time['column'], bucket=_build_bucket(EnumDataBase.DRUID, time['interval']))
         elif sql_type == EnumDataBase.PG:
-            time_select_sql = 'SELECT floor(extract(epoch from {column})/{interval})*{interval} AS "time" ' \
-                                .format(column=time['column'], interval=time['interval'])
+            time_select_sql = 'SELECT to_timestamp(floor(extract(epoch from "{column}")/{bucket})*{bucket}) AS "time" ' \
+                .format(column=time['column'], bucket=_build_bucket(EnumDataBase.PG, time['interval']))
         sql_list.append(time_select_sql)
         # 当存在时序字段，且还有其他需要查询的字段，添加逗号
         if len(select) > 0:
@@ -37,11 +80,11 @@ def _build_select(select, time, sql_type):
         if len(s['metric']) > 0:
             # count distinct使用格式较为特殊，单独处理
             if s['metric'] in ['COUNT DISTINCT', 'count distinct']:
-                sql_list.append('COUNT(DISTINCT {column}) '.format(column=s['column']))
+                sql_list.append('COUNT(DISTINCT "{column}") '.format(column=s['column']))
             else:
-                sql_list.append('{metric}({column}) '.format(metric=s['metric'], column=s['column']))
+                sql_list.append('{metric}("{column}") '.format(metric=s['metric'], column=s['column']))
         else:
-            sql_list.append('{column} '.format(column=s['column']))
+            sql_list.append('"{column}" '.format(column=s['column']))
         # 判断是否有别名
         if len(s['alias']) > 0:
             sql_list.append(
@@ -65,11 +108,11 @@ def _build_filter(filters, time):
     filter_list = []
     # 若存在时序字段，则将此添加到第一个filter（当无时序字段的时候，相当于普通的表查询）
     if len(time['column']) > 0:
-        filter_list.append("{time}>='{begin}' ".format(time=time['column'], begin=time['begin']))
-        filter_list.append("{time}<='{end}' ".format(time=time['column'], end=time['end']))
+        filter_list.append("\"{time}\">='{begin}' ".format(time=time['column'], begin=time['begin']))
+        filter_list.append("\"{time}\"<='{end}' ".format(time=time['column'], end=time['end']))
     for f in filters:
         filter_list.append(
-            "{column}{op}'{value}' ".format(column=f['column'], op=f['op'], value=f['value'])
+            "\"{column}\"{op}'{value}' ".format(column=f['column'], op=f['op'], value=f['value'])
         )
     return 'WHERE {filter}'.format(filter=' AND '.join(filter_list))
 
@@ -86,7 +129,7 @@ def _build_group(group_list, time, sql_type):
     if len(time['column']) == 0 and len(group_list) == 0:
         return ''
     res_list = []
-    # 判断sql类型（在group处理上pg和druid有不同，druid需要加单引号，pg不需要）
+    # 判断sql类型（在group处理上pg和druid有不同，druid需要加单引号，pg为了区分大小写，同一加双引号）
     if sql_type == EnumDataBase.DRUID:
         # 若存在时序字段，则置首位为1
         if len(time['column']) > 0:
@@ -96,7 +139,7 @@ def _build_group(group_list, time, sql_type):
         # 若存在时序字段，则将时序字段放在第一个GROUP
         if len(time['column']) > 0:
             res_list.append('time')
-        res_list.extend(group_list)
+        res_list.extend(['"{}"'.format(i) for i in group_list])
     return 'GROUP BY {} '.format(','.join(res_list))
 
 
@@ -195,7 +238,7 @@ def _check_metric(metric):
     :return:
     """
     legal_metric = ['', 'SUM', 'sum', 'AVG', 'avg', 'COUNT', 'count', 'MAX', 'max'
-                    'MIN', 'min', 'COUNT DISTINCT', 'count distinct']
+                    'MIN', 'min', 'COUNT DISTINCT','count distinct']
     if metric not in legal_metric:
         raise RuntimeError('"{metric}" metric is not supported'.format(metric=metric))
     return True

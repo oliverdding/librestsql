@@ -12,7 +12,7 @@ data_json = '''
       "column":"create_time",
       "begin":"2021-7-20",
       "end":"2021-7-30",
-      "interval":"86400"
+      "interval":"1d"
     },
     "select":[
       {
