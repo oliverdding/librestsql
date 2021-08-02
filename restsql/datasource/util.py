@@ -21,6 +21,7 @@ def _druid_bucket(interval):
     :param interval: RestSql格式的时间间隔
     :return: Druid支持的时间间隔格式
     """
+    # RestSql单位对应的Druid时间间隔格式，?当作占位符，后面用来替换为数字
     time_bucket = {"y": "P?Y", "M": "P?M", "w": "P?W", "d": "P?D",
                    "h": "PT?H", "m": "PT?M", "s": "PT?S"}
     return time_bucket[interval[-1]].replace('?', interval[:-1])
@@ -111,10 +112,25 @@ def _build_filter(filters, time):
         filter_list.append("\"{time}\">='{begin}' ".format(time=time['column'], begin=time['begin']))
         filter_list.append("\"{time}\"<='{end}' ".format(time=time['column'], end=time['end']))
     for f in filters:
-        filter_list.append(
-            "\"{column}\"{op}'{value}' ".format(column=f['column'], op=f['op'], value=f['value'])
-        )
+        filter_list.append(_filter_handler(f))
     return 'WHERE {filter}'.format(filter=' AND '.join(filter_list))
+
+
+def _filter_handler(filter_dic):
+    """
+    处理单个filter，将收到的字典里的信息提取出来，生成一个完整的表达式，同时利于多filter支持操作符的扩展，
+    例如startswith以及需要实现一些扩展功能
+    :param filter_dic: 包含一个filter信息的字典
+    :return: 完整的表达式字符串
+    """
+    filter_op = {"startswith": "?%", "endswith": "%?", "contains": "%?%"}
+    # 对普通比较符的处理
+    if filter_dic['op'] not in filter_op.keys():
+        return "\"{column}\"{op}'{value}' " \
+            .format(column=filter_dic['column'], op=filter_dic['op'], value=filter_dic['value'])
+    # 对filter_op里的操作符的处理
+    return "\"{column}\" like '{value}' " \
+        .format(column=filter_dic['column'], value=filter_op[filter_dic['op']].replace('?', filter_dic['value']))
 
 
 def _build_group(group_list, time, sql_type):
@@ -151,7 +167,7 @@ def to_sql(que: Query, sql_type):
     :return: 常规的SQL语句
     """
     _check_field(que)  # 检查是否含有非法字段
-    source = 'from ' + que.From.split('.')[1] + ' '  # 数据源
+    source = 'from "{}" '.format(que.From.split('.')[1])  # 数据源
     select = _build_select(que.select_list, que.time_dict, sql_type)  # 字段这部分sql
     filters = _build_filter(que.where_list, que.time_dict)  # 过滤条件
     group = _build_group(que.group_list, que.time_dict, sql_type)  # 分组
@@ -225,7 +241,9 @@ def _check_op(op):
     :param op:
     :return: 若支持此操作符则返回True，否则抛出错误
     """
-    legal_op = ['=', '>', '>=', '<', '<=', 'in', 'IN', 'NOT IN', 'not in', 'LIKE', 'like']
+    # 合法的操作符
+    legal_op = ['=', '>', '>=', '<', '<=', 'in', 'IN', 'NOT IN', 'not in', 'LIKE', 'like',
+                'startswith', 'endswith', 'contains']
     if op not in legal_op:
         raise RuntimeError('"{op}" op is not supported'.format(op=op))
     return True
@@ -238,7 +256,8 @@ def _check_metric(metric):
     :return:
     """
     legal_metric = ['', 'SUM', 'sum', 'AVG', 'avg', 'COUNT', 'count', 'MAX', 'max'
-                    'MIN', 'min', 'COUNT DISTINCT','count distinct']
+                                                                             'MIN', 'min', 'COUNT DISTINCT',
+                    'count distinct']
     if metric not in legal_metric:
         raise RuntimeError('"{metric}" metric is not supported'.format(metric=metric))
     return True
