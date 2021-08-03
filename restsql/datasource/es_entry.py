@@ -2,7 +2,7 @@ import pandas as pd
 import json
 
 
-_all_ = ['EsClient']
+_all_ = ['EsQuery']
 
 
 class EsQuery:
@@ -202,7 +202,7 @@ class EsQuery:
         self._parse_composite()
         self._parse_fields()
         self._parse_metric()
-        print(self.dsl)
+        #print(self.dsl)
         return self.dsl
 
 

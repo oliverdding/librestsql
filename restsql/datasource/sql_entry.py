@@ -177,9 +177,8 @@ def to_sql(que: Query, sql_type, schema=None):
     """
     # where中的value构成的字典
     param_dic = {}
-    _check_field(que)  # 检查是否含有非法字段
     if schema is None:
-        source = 'FROM "{}" '.format(que.From.split('.')[1])  # 数据源
+        source = 'FROM "{}" '.format(que.target.split('.')[1])  # 数据源
     else:
         source = 'FROM "{}"."{}" '.format(schema, que.From.split('.')[1])  # 数据源
     select = _build_select(que.select_list, que.time_dict, sql_type)  # 字段这部分sql
@@ -208,69 +207,3 @@ def get_columns(que: Query):
     return columns
 
 
-def _is_illegal(value):
-    """
-    检查value中是否还有illegal_char里面定义的非法字符
-    :param value: 需要检查的值
-    :return:
-    """
-    illegal_char = ['--', ' ', ';', '/*', '"', "'"]  # 非法字符
-    for ill in illegal_char:
-        if ill in value:
-            raise RuntimeError('Illegal characters "{ill}" found'.format(ill=ill))
-
-
-def _check_field(que: Query):
-    """
-    检查输入的信息中是否有非法字符，例如 '-',';'以及空格，防止SQL注入
-    :param que: 包含查询信息的Query封装对象
-    :return:
-    """
-    # 检查SELECT中是否有非法字符
-    for s in que.select_list:
-        # 遍历每个select字典
-        for k, v in s.items():
-            if k == 'metric':
-                # 若通过了聚合函数名检查则该字段必然合法，跳过合法检验
-                if _check_metric(v):
-                    continue
-            _is_illegal(v)
-    # 检查WHERE中是否有非法字符
-    for f in que.where_list:
-        # 遍历每个where字典
-        for k, v in f.items():
-            if k == 'op':
-                # 若通过了操作符检查则该字段必然合法，跳过合法检验
-                if _check_op(v):
-                    continue
-            _is_illegal(v)
-    # 检查GROUP中是否有非法字符
-    for g in que.group_list:
-        _is_illegal(g)
-
-
-def _check_op(op):
-    """
-    检查操作符op是否支持
-    :param op:
-    :return: 若支持此操作符则返回True，否则抛出错误
-    """
-    # 合法的操作符
-    legal_op = ['=', '>', '>=', '<', '<=', 'in', 'IN', 'NOT IN', 'not in', 'LIKE', 'like',
-                'startswith', 'endswith', 'contains']
-    if op not in legal_op:
-        raise RuntimeError('"{op}" op is not supported'.format(op=op))
-    return True
-
-
-def _check_metric(metric):
-    """
-    检查聚合函数metric是否支持
-    :param metric: 聚合函数名
-    :return:
-    """
-    legal_metric = ['', 'SUM', 'sum', 'AVG', 'avg', 'COUNT', 'count', 'MAX', 'max'
-                    'MIN', 'min', 'COUNT DISTINCT', 'count distinct']
-    if metric not in legal_metric:
-        raise RuntimeError('"{metric}" metric is not supported'.format(metric=metric))
-    return True

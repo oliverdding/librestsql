@@ -1,10 +1,8 @@
 # encoding=utf-8
-import logging
-from restsql.datasource.es_entry import *
-from restsql.query import Query
 from restsql.datasource.sql_entry import *
-from restsql.config.database import db_settings, EnumDataBase
-from restsql.datasource.client import PgClient, DruidClient,EsClient
+from restsql.config.database import *
+from restsql.datasource.client import *
+from restsql.check import *
 
 __all__ = ['RestClient']
 
@@ -22,12 +20,14 @@ class RestClient:
     # 供服务器端调用的接口
     def query(self):
         # 进行格式检查，过滤掉非法字符，避免sql注入
-        _check_field(self.query_instance)
+        table_name = self.query_instance.target.split(".")[1]
+        print(table_name)
+        _check(self.query_instance, table_name)
         if self.query_instance.target is None:
             raise RuntimeError("The query target is empty")
         db_name = self.query_instance.target.split(".")[0]
         # 获取DataBase对象
-        database = db_settings.get_by_dbname(db_name)
+        database = db_settings.get_by_name(db_name)
         if database.db_type == EnumDataBase.ES:
             client = EsClient(database)
         elif database.db_type == EnumDataBase.PG:

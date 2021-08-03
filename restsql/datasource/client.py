@@ -7,7 +7,7 @@ from restsql.datasource.es_entry import EsQuery
 import psycopg2
 import pandas as pd
 
-__all__ = ['Client', 'DruidClient', 'PgClient','EsClient']
+__all__ = ['Client', 'DruidClient', 'PgClient', 'EsClient']
 
 from restsql.query import Query
 
@@ -109,4 +109,3 @@ class EsClient(Client):
         # 关闭连接操作
         self.database.connect_db().close()
         return pd.DataFrame(results)
-

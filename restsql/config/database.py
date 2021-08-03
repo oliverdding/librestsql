@@ -63,18 +63,19 @@ class DataBase:
             self.black_fields = black_fields
         else:
             raise RuntimeError("Dict of table_name: [field_name] needed.")
-        if db_type == EnumDataBase.PG:
+
+    def connect_db(self):
+        if self.db_type == EnumDataBase.PG:
             if self.db_name is None or self.port is None or self.user is None or self.password is None:
                 raise RuntimeError("Empty elements in PgSQL")
-            self.db = psycopg2.connect(database=self.db_name, user=self.user,
-                                       password=self.password, host=self.host, port=self.port)
-        elif db_type == EnumDataBase.ES:
-            self.db = Elasticsearch(host)
-        elif db_type == EnumDataBase.DRUID:
-            if db_name is None or port is None or host is None:
+            return psycopg2.connect(database=self.db_name, user=self.user,
+                                    password=self.password, host=self.host, port=self.port)
+        elif self.db_type == EnumDataBase.DRUID:
+            if self.host is None or self.port is None:
                 raise RuntimeError("Empty elements in Druid")
-            #             使用sql方式使用
-            self.db = connect(host=host, port=port, path='/druid/v2/sql', scheme='http')
+            return connect(host=self.host, port=self.port)
+        elif self.db_type == EnumDataBase.ES:
+            return Elasticsearch(self.host + ":" + str(self.port))
 
 
 class _DbSettings:
