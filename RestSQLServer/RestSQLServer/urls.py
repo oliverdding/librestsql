@@ -23,4 +23,5 @@ urlpatterns = [
     path('search', views.searchSourceView),
     path('query', views.querySourceView),
     path('helloworld', views.helloword),
+    path('restsql', views.apiquery),
 ]

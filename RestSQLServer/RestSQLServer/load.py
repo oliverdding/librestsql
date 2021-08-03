@@ -3,11 +3,13 @@ import json
 import logging
 
 from restsql.config.database import EnumDataBase, db_settings
-from restsql.config.table import NumberField, StringField, BoolField, IntField, Table
+from restsql.config.table import NumberField, StringField, BoolField, IntField, TimeField, Table
 
-logger = logging.getLogger("restsql_model")
+__all__ = ['init_json']
+logger = logging.getLogger("restsql_load")
 
 table_map = {}
+
 
 # 注意dbsetting模块的导入的方式
 def get_db_type(db_type):
@@ -40,6 +42,8 @@ def init_json():
                 fields[k] = NumberField()
             elif v == "BoolField":
                 fields[k] = BoolField()
+            elif v == "TimeField":
+                fields[k] = TimeField()
             else:
                 logger.critical("载入数据源配置出错: 无法识别的字段类型: %s", v)
                 raise Exception("载入数据源配置出错: 无法识别的字段类型: {}".format(v))

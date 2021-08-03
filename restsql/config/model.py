@@ -1,15 +1,3 @@
-class PostgreDatabase:
-    """
-    作为postgre模板类
-    """
-    def __init__(self, db_name, user, password, host, port):
-        self.db_name = db_name
-        self.user = user
-        self.password = password
-        self.host = host
-        self.port = port
-
-
 class DruidDatabase:
     def __init__(self, host, port):
         """
@@ -25,12 +13,12 @@ class Query:
         """
         :param query_dict: 请求协议字典
         """
-        self.From = query_dict["from"]
-        self.time_dict = query_dict["time"]
-        self.select_list = query_dict["select"]
-        self.where_list = query_dict["Where"]
-        self.group_list = query_dict["group"]
-        self.limit = query_dict["limit"]
+        self.From = query_dict.get("from", None)
+        self.time_dict = query_dict.get("time", {})
+        self.select_list = query_dict.get("select", [])
+        self.where_list = query_dict.get("where", [])
+        self.group_list = query_dict.get("group", [])
+        self.limit = query_dict.get('limit', None)
 
 
 class Client:

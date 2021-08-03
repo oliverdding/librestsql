@@ -1,9 +1,12 @@
 import re
 
 from restsql.config.database import db_settings, EnumDataBase
-from restsql.datasource.pg_client import PgClient
+# from restsql.datasource.pg_client import PgClient
+# 先使用orm 进行Pg查询
+from restsql.datasource.pg_orm_client import PgClient
 from restsql.datasource.es_client import EsClient
 from restsql.datasource.druid_client import DruidClient
+from restsql.config.model import Query
 
 
 class Client:
@@ -21,7 +24,7 @@ class Client:
             self._result = client.query(querysql)
         elif dbtype == EnumDataBase.PG:
             client = PgClient(datasource)
-            self._result = client.query(querysql)
+            self._result = client.query(Query(querysql))
         elif dbtype == EnumDataBase.DRUID:
             client = DruidClient(datasource)
             self._result = client.druid_query(querysql)
@@ -31,4 +34,4 @@ class Client:
 
     @property
     def result(self):
-        return self._queryresult
+        return self._result
