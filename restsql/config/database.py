@@ -1,11 +1,14 @@
 from elasticsearch import Elasticsearch
 from pydruid.db import connect
 from peewee import PostgresqlDatabase
-from restsql.config.model import *
-import os,sys
+import os
+import sys
+import psycopg2
+
 __all__ = ['EnumDataBase', 'DataBase', 'db_settings']
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(BASE_DIR)
+
 
 class EnumDataBase:
     PG = 'PostgreSQL'
@@ -61,16 +64,10 @@ class DataBase:
         else:
             raise RuntimeError("Dict of table_name: [field_name] needed.")
         if db_type == EnumDataBase.PG:
-            if db_name is None or port is None or user is None or password is None:
+            if self.db_name is None or self.port is None or self.user is None or self.password is None:
                 raise RuntimeError("Empty elements in PgSQL")
-            self.db = PostgresqlDatabase(
-                db_name,
-                user=user,
-                password=password,
-                host=host,
-                port=port
-            )
-
+            self.db = psycopg2.connect(database=self.db_name, user=self.user,
+                                       password=self.password, host=self.host, port=self.port)
         elif db_type == EnumDataBase.ES:
             self.db = Elasticsearch(host)
         elif db_type == EnumDataBase.DRUID:
@@ -116,26 +113,15 @@ class _DbSettings:
         :param password: 密码。用户连接数据库。
         :param schema: 模式。用于pgsql数据源。
         :param tables: 表。用户自定义相关表。是继承自Table类的类的list。
-        :param black_tables: 黑名单表。使用自动维护时有用。是string的list。
-        :param black_fields: 黑名单字段。使用自动维护时有用。是字典，结构为{'表名': ['需忽视字段名', ], }
+        :param black_tables: 黑名单表。是string的list。
+        :param black_fields: 黑名单字段。是字典，结构为{'表名': ['字段名', ], }
         :return: None
         """
         self._db_settings[name] = DataBase(name, db_type, host, db_name, port, user, password, schema, tables,
                                            black_tables, black_fields)
 
-    def remove_by_name(self, name):
-        """
-        根据提供的db_setting's name删除db_setting
-        :param name: 待删除db_setting的name
-        :return: None
-        """
-        if name in self._db_settings:
-            del self._db_settings[name]
-
     def get_by_name(self, name):
         """
-        根据提供的db_setting的name获取db_setting。
-        注意：需手动维护锁
         :param name: 待获取db_setting的name
         :return: db_setting
         """

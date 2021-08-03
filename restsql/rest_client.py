@@ -1,37 +1,35 @@
-import re
-
+# encoding=utf-8
+import logging
+from restsql.datasource.es_entry import *
+from restsql.query import Query
+from restsql.datasource.util import *
 from restsql.config.database import db_settings, EnumDataBase
-# from restsql.datasource.pg_client import PgClient
-# 先使用orm 进行Pg查询
-from restsql.datasource.pg_orm_client import PgClient
-from restsql.datasource.es_client import EsClient
-from restsql.datasource.druid_client import DruidClient
-from restsql.config.model import Query
+from restsql.datasource.client import PgClient, DruidClient,EsClient
+
+__all__ = ['RestClient']
 
 
-class Client:
+class RestClient:
+    """
+    restsql主要服务类，服务器端调用，输入请求协议，输出DataFrame
+    内部实现：
+    根据请求协议识别查询的数据源，通过调用相应数据源的Client服务类，输出DataFrame
+    """
 
-    def __init__(self):
-        self._result = None
+    def __init__(self, query_dict):
+        self.query_instance = Query(query_dict)
 
-    def query(self, querysql):
-        p = re.compile(r'\W+')  # test.table ，分离出单词
-        sub = p.split(querysql['from'])
-        datasource = db_settings.get_by_name(sub[0])
-        dbtype = datasource.db_type
-        if dbtype == EnumDataBase.ES:
-            client = EsClient(datasource)
-            self._result = client.query(querysql)
-        elif dbtype == EnumDataBase.PG:
-            client = PgClient(datasource)
-            self._result = client.query(Query(querysql))
-        elif dbtype == EnumDataBase.DRUID:
-            client = DruidClient(datasource)
-            self._result = client.druid_query(querysql)
+    # 供服务器端调用的接口
+    def query(self):
+        # 进行格式检查，过滤掉非法字符，避免sql注入
+        _check_field(self.query_instance)
+        db_name = self.query_instance.From.split(".")[0]
+        # 获取DataBase对象
+        database = db_settings.get_by_dbname(db_name)
+        if database.db_type == EnumDataBase.ES:
+            client = EsClient(database)
+        elif database.db_type == EnumDataBase.PG:
+            client = PgClient(database)
         else:
-            return False
-        return True
-
-    @property
-    def result(self):
-        return self._result
+            client = DruidClient(database)
+        return client.query(self.query_instance)

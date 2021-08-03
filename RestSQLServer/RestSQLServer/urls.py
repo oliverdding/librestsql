@@ -19,9 +19,13 @@ from . import views
 
 urlpatterns = [
     path('admin', admin.site.urls),
-    path('', views.testSourceView),
-    path('search', views.searchSourceView),
-    path('query', views.querySourceView),
-    path('helloworld', views.helloword),
-    path('restsql', views.apiquery),
+    path('', views.test),
+    # 作为restsql Http接口
+    path('restsql/query', views.apiquery),
+    path('restsql/find_tables', views.table_query),
+    path('restsql/find_databases', views.database_query),
+    # 作为restsql Grafana接口
+    path('query', views.grafana_query),
+    path('search', views.grafana_search)
+    # path('/annotations', views.),
 ]

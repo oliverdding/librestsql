@@ -2,8 +2,9 @@
 """Django's command-line utility for administrative tasks."""
 import os
 import sys
-from RestSQLServer.config.load import *
 
+sys.path.extend([r'E:\f1ed-restsql-librestsql-master'])  # 这一句引入不要去掉，才能获取到restsql位置，后续处理，使用环境变量传入
+from RestSQLServer.config.load import *
 
 def main():
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'RestSQLServer.settings')
@@ -19,5 +20,6 @@ def main():
 
 
 if __name__ == '__main__':
-    init_json(CONF_RESTSQL_PATH)
+    init_yaml(CONF_RESTSQL_PATH)
+    print("loading database_config successfully! ")
     main()

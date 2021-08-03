@@ -1,6 +1,6 @@
-from restsql.datasource.druid_client import Client
 import pandas as pd
 import json
+
 
 _all_ = ['EsClient']
 
@@ -75,39 +75,77 @@ class EsQuery:
         后续商讨后进行修改
         :return:
         """
-        for filter in self.where_list:
-            if filter["op"] == "=":
+        for filter_dic in self.where_list:
+            if filter_dic["op"] == "=":
                 self.dsl_where.append({
                     'term': {
-                        filter["column"]: filter["value"]
+                        filter_dic["column"]: filter_dic["value"]
                     }
                 })
-            elif filter["op"] == "<":
+            elif filter_dic["op"] == "!=":
+                self.dsl_where.append({
+                    "bool": {
+                        "must_not": [
+                            {
+                                "term": {
+                                    filter_dic["column"]: filter_dic["value"]
+                                }
+                            }
+                        ]
+                    }})
+            elif filter_dic["op"] == "<":
                 self.dsl_where.append({
                     'range': {
-                        filter["column"]: {'lt': filter["value"]}
+                        filter_dic["column"]: {'lt': filter_dic["value"]}
                     }
                 })
-            elif filter["op"] == ">":
+            elif filter_dic["op"] == ">":
                 self.dsl_where.append({
                     'range': {
-                        filter["column"]: {'gt': filter["value"]}
+                        filter_dic["column"]: {'gt': filter_dic["value"]}
                     }
                 })
-            elif filter["op"] == "<=":
+            elif filter_dic["op"] == "<=":
                 self.dsl_where.append({
                     'range': {
-                        filter["column"]: {'lte': filter["value"]}
+                        filter_dic["column"]: {'lte': filter_dic["value"]}
                     }
                 })
-            elif filter["op"] == ">=":
+            elif filter_dic["op"] == ">=":
                 self.dsl_where.append({
                     'range': {
-                        filter["column"]: {'gte': filter["value"]}
+                        filter_dic["column"]: {'gte': filter_dic["value"]}
                     }
                 })
+            elif filter_dic["op"] == 'contains':
+                self.dsl_where.append({
+                    'wildcard': {filter_dic["column"]: ''.join(['*', filter_dic["value"], '*'])}
+                })
+            elif filter_dic["op"] == 'startswith':
+                self.dsl_where.append({
+                    'prefix': {filter_dic["column"]: filter_dic["value"]}
+                })
+            elif filter_dic["op"] == 'endswith':
+                self.dsl_where.append({
+                    'wildcard': {filter_dic["column"]: ''.join(['*', filter_dic["value"]])}
+                })
+            elif filter_dic["op"] == 'in':
+                self.dsl_where.append({
+                    'terms': {filter_dic["column"]: filter_dic["value"]}
+                })
+            elif filter_dic["op"] == 'not in':
+                self.dsl_where.append({
+                    "bool": {
+                        "must_not": [
+                            {
+                                "terms": {
+                                    filter_dic["column"]: filter_dic["value"]
+                                }
+                            }
+                        ]
+                    }})
             else:
-                raise SyntaxError('cat not support op: {0}, field: {1}'.format(filter["op"], filter["column"]))
+                raise SyntaxError('cat not support op: {0}, field: {1}'.format(filter_dic["op"], filter_dic["column"]))
             # 请求协议输入必须为yyyy-MM-dd之类的格式且必须补足位数
         if self.time["begin"] is not None and self.time["begin"] != "":
             self.dsl_where.append({
@@ -124,13 +162,14 @@ class EsQuery:
         if len(self.dsl_where) == 0:
             del self.dsl["query"]
 
-    def _parse_group(self):
-        func_map = {'count': 'value_count', 'sum': 'sum', 'avg': 'avg', 'max': 'max', 'min': 'min',
-                    'count_distinct': 'cardinality'}
+    def _parse_metric(self):
+        func_map = {'count': 'value_count','sum': 'sum', 'avg': 'avg', 'max': 'max', 'min': 'min',
+                    'count distinct': 'cardinality'}
         for s in self.select_list:
-            if s["metric"] in func_map.keys():
-                # 针对文本数据进行聚合可能存在问题
+            if s["metric"] in func_map.keys() and s["metric"]!="count":
                 self.dsl_aggs[s["alias"]] = {func_map[s["metric"]]: {'field': s["column"]}}
+            elif s["metric"]=="count":
+                self.dsl_aggs[s["alias"]] = {func_map[s["metric"]]: {'field': s["column"]+".keyword"}}
             else:
                 if s["metric"] == "" or s["metric"] is None:
                     continue
@@ -143,7 +182,7 @@ class EsQuery:
             self.dsl_composite.append(sources_dict)
         if self.time["interval"] is not None and self.time["interval"] != "":
             sources_dict = {self.time["column"]: {"date_histogram": {"field": self.time["column"]}}}
-            sources_dict[self.time["column"]]["date_histogram"]["interval"] = self.time["interval"]+"s"
+            sources_dict[self.time["column"]]["date_histogram"]["interval"] = self.time["interval"]
             sources_dict[self.time["column"]]["date_histogram"]["format"] = "yyyy-MM-dd HH:mm:ss"
             self.dsl_composite.append(sources_dict)
         if len(self.dsl_composite) == 0:
@@ -162,48 +201,8 @@ class EsQuery:
         self._parse_where()
         self._parse_composite()
         self._parse_fields()
-        self._parse_group()
+        self._parse_metric()
+        print(self.dsl)
         return self.dsl
 
 
-class EsClient(Client):
-    """
-    Es数据源服务类，供restSqlClient调用
-    """
-
-    # 这里为暴露的接口，供进行调用,统一返回dateframe
-    def query(self, que):
-        alias_dict = {}
-        for s in que.select_list:
-            alias_dict[s["column"]] = s["alias"]
-        alias_dict[que.time_dict["column"]] = "time"
-        results = []
-        esQuery = EsQuery(que)
-        index = que.From.split(".")[1]
-        dsl = esQuery.parse()
-        raw_result = self.database.connect_db().search(index=index, body=dsl)
-        if 'aggs' in raw_result or 'aggregations' in raw_result:
-            if raw_result.get('aggregations'):
-                results = raw_result['aggregations']['groupby']['buckets']
-            else:
-                results = raw_result['agg']['groupby']['buckets']
-            for it in results:
-                it["time"] = it["key"][que.time_dict["column"]]
-                del it['key']
-                del it['doc_count']
-                for field, value in it.items():
-                    if isinstance(value, dict) and 'value' in value:
-                        it[field] = value['value']
-        elif 'hits' in raw_result and 'hits' in raw_result['hits']:
-            for it in raw_result['hits']['hits']:
-                record = it['_source']
-                result = {}
-                for field in record.keys():
-                    if alias_dict[field] == "":
-                        result[field] = record[field]
-                    else:
-                        result[alias_dict[field]] = record[field]
-                results.append(result)
-        # 关闭连接操作
-        self.database.connect_db().close()
-        return pd.DataFrame(results)

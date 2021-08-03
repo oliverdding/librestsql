@@ -4,9 +4,9 @@ from django.http import HttpResponse, HttpResponseBadRequest
 from django.views.decorators.http import require_GET
 import json
 import sys
+
 sys.path.extend([r'E:\f1ed-restsql-librestsql-master'])
 from restsql import rest_client
-
 
 from .config.exception import JsonFormatException, RunningException, UserConfigException, RestSqlExceptionBase, \
     ProgramConfigException
@@ -15,30 +15,16 @@ from .utils import frame_parse_obj
 from restsql.config.database import db_settings
 
 
-def testSourceView(request):
+def test(request):
     return HttpResponse('pk')
 
 
-def searchSourceView(request):
+def grafana_search(request):
     return HttpResponse('ok')
 
 
-def querySourceView(request):
-    restquery = json.loads(request.body)
-    print(restquery)
-
-    from_item = restquery['from']
-    # 这里可以加错误处理
-
-    client = rest_client.Client()
-
-    # 返回结果
-    flag = client.query(restquery)
-    # if flag:
-    #     result = client.result
-    #     return HttpResponse('ok')
-
-    return HttpResponse('false')
+def grafana_query(request):
+    return HttpResponse('ok')
 
 
 @require_GET
@@ -59,11 +45,11 @@ def apiquery(request):
     if not rest_query.get('from', None):
         return HttpResponse(ResponseModel.failure('400', "You need to specify the target data source"))
     try:
-        client = rest_client.Client()
-        client.query(rest_query)
+        client = rest_client.RestClient
+        result = client.query(rest_query)
     except RestSqlExceptionBase as e:
         return HttpResponse(ResponseModel.failure(e.code, "The query failed，the error message: {}".format(e.message)))
-    resp = frame_parse_obj(client.result, return_format)  # 如果是不指明以txt,或者html格式的，在内部进行转json返回
+    resp = frame_parse_obj(result, return_format)  # 如果是不指明以txt,或者html格式的，在内部进行转json返回
     return HttpResponse(resp)
 
 
@@ -105,7 +91,3 @@ def database_query(request):
         return HttpResponse(resp)
     else:
         return HttpResponseBadRequest(ResponseModel.failure("400", "Incorrect request method"))
-
-
-def helloword(request):
-    return HttpResponse('ok')
