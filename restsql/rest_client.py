@@ -2,7 +2,7 @@
 import logging
 from restsql.datasource.es_entry import *
 from restsql.query import Query
-from restsql.datasource.util import *
+from restsql.datasource.sql_entry import *
 from restsql.config.database import db_settings, EnumDataBase
 from restsql.datasource.client import PgClient, DruidClient,EsClient
 
@@ -23,7 +23,9 @@ class RestClient:
     def query(self):
         # 进行格式检查，过滤掉非法字符，避免sql注入
         _check_field(self.query_instance)
-        db_name = self.query_instance.From.split(".")[0]
+        if self.query_instance.target is None:
+            raise RuntimeError("The query target is empty")
+        db_name = self.query_instance.target.split(".")[0]
         # 获取DataBase对象
         database = db_settings.get_by_dbname(db_name)
         if database.db_type == EnumDataBase.ES:

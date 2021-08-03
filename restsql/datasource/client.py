@@ -1,7 +1,7 @@
 # encoding=utf-8
 
 from restsql.config.database import EnumDataBase
-from restsql.datasource.util import to_sql, get_columns
+from restsql.datasource.sql_entry import to_sql, get_columns
 from sqlalchemy.exc import CompileError
 from restsql.datasource.es_entry import EsQuery
 import psycopg2
@@ -34,11 +34,11 @@ class DruidClient(Client):
     """
 
     def query(self, que):
-        sql = to_sql(que, EnumDataBase.DRUID)
+        sql, param_dic = to_sql(que, EnumDataBase.DRUID, self.database.schema)
         try:
             conn = self.database.connect_db()
             curs = conn.cursor()
-            curs.execute(sql)
+            curs.execute(sql, param_dic)
         except CompileError as e:
             raise e
         res = curs.fetchall()
@@ -52,13 +52,13 @@ class PgClient(Client):
     """
 
     def query(self, que: Query):
-        sql = to_sql(que, EnumDataBase.PG)
+        sql, param_dic = to_sql(que, EnumDataBase.PG, self.database.schema)
         conn = self.database.connect_db()
         columns = get_columns(que)
         # 调用数据库，得到sql语句查询的结果
         try:
             with conn.cursor() as cursor:
-                cursor.execute(sql)
+                cursor.execute(sql, param_dic)
                 rows = cursor.fetchall()
         except psycopg2.Error as e:
             raise e
@@ -81,7 +81,7 @@ class EsClient(Client):
         alias_dict[que.time_dict["column"]] = "time"
         results = []
         esQuery = EsQuery(que)
-        index = que.From.split(".")[1]
+        index = que.target.split(".")[1]
         dsl = esQuery.parse()
         raw_result = self.database.connect_db().search(index=index, body=dsl)
         if 'aggs' in raw_result or 'aggregations' in raw_result:

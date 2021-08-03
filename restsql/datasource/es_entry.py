@@ -32,7 +32,7 @@ class EsQuery:
         self.limit = 1000
         if query.limit is not None:
             self.limit = query.limit
-        self.index = query.From.split(".")[1]
+        self.index = query.target.split(".")[1]
         self.select_list = query.select_list
         self.time = query.time_dict
         self.group_list = query.group_list

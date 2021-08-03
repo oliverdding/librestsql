@@ -1,7 +1,7 @@
 import logging
 
 from django.http import HttpResponse, HttpResponseBadRequest
-from django.views.decorators.http import require_GET
+from django.views.decorators.http import require_POST
 import json
 import sys
 
@@ -27,7 +27,7 @@ def grafana_query(request):
     return HttpResponse('ok')
 
 
-@require_GET
+@require_POST
 def apiquery(request):
     """
     :param request: 获取请求需要的query,以及而外的参数，如format,额外希望返回的格式
@@ -45,8 +45,8 @@ def apiquery(request):
     if not rest_query.get('from', None):
         return HttpResponse(ResponseModel.failure('400', "You need to specify the target data source"))
     try:
-        client = rest_client.RestClient
-        result = client.query(rest_query)
+        client = rest_client.RestClient(rest_query)
+        result = client.query()
     except RestSqlExceptionBase as e:
         return HttpResponse(ResponseModel.failure(e.code, "The query failed，the error message: {}".format(e.message)))
     resp = frame_parse_obj(result, return_format)  # 如果是不指明以txt,或者html格式的，在内部进行转json返回

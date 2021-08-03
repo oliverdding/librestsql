@@ -11,9 +11,9 @@ class Query:
         """
         :param query_dict: 请求协议字典
         """
-        self.From = query_dict["from"]
-        self.time_dict = query_dict["time"]
-        self.select_list = query_dict["select"]
-        self.where_list = query_dict["where"]
-        self.group_list = query_dict["group"]
-        self.limit = query_dict["limit"]
+        self.target = query_dict.get("from", "")
+        self.time_dict = query_dict.get("time", {})
+        self.select_list = query_dict.get("select", [])
+        self.where_list = query_dict.get("where", [])
+        self.group_list = query_dict.get("group", [])
+        self.limit = query_dict.get("limit", None)
