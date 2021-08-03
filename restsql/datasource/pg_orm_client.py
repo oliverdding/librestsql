@@ -1,10 +1,10 @@
+import peewee
+
 from restsql.config.model import Client, Query
 from restsql.config.table import Table
 from peewee import Model, fn, TextField, IntegerField, DoubleField, BooleanField, DateTimeField
 import pandas as pd
 from restsql.config.table import StringField, IntField, BoolField, NumberField, TimeField
-from . import loads1
-from restsql.config.database import db_settings
 
 __all__ = ['PgClient']
 
@@ -72,7 +72,8 @@ class PGQuery:
                 select_params = self.extract_select_params()
         else:
             select_params = self.extract_select_params()
-
+            print("hhh")
+            print(len(select_params))
         self.results = self.model.select(*select_params)  # 变为可变形参传进去
         if len(where_params) > 0:
             self.results = self.results.where(*where_params)
@@ -84,11 +85,15 @@ class PGQuery:
             self.results = self.results.limit(limit_size)
         if time_flag:
             return self.handle_time_bucket(select_metric)
-
+        print(self.results)
         return pd.DataFrame(self.results.dicts())
 
     def extract_group_params(self):
-        group_params = [getattr(self.model, field) for field in self.query.group_list]
+        try:
+            group_params = [getattr(self.model, field) for field in self.query.group_list]
+        except Exception as e:
+            raise RuntimeError("the group param is false")
+
         return group_params
 
     def extract_where_params(self):  # 仅仅或处理
@@ -170,10 +175,11 @@ class PGQuery:
     def handle_time_bucket(self, metric):
         if len(metric.keys()) < 1:
             raise RuntimeError("the metric can't be empty")
+        print(self.results)
         df = pd.DataFrame(self.results.dicts())
         time_column = self.query.time_dict['column']
         df[time_column] = pd.to_datetime(df[time_column])  # 整理标准时间格式
-        return df.resample(self.query.time_dict['interval'], on=time_column).agg(metric)
+        return df.resample(self.query.time_dict['interval'], on=time_column).agg(metric) # 使用pandas 进行时间切片
 
 
 class PgClient(Client):
@@ -186,6 +192,8 @@ class PgClient(Client):
 
     def query(self, que: Query):
         pg_query = PGQuery(que, self.dataBase)
-
-        df = pg_query.pgsql_query()
+        try:
+            df = pg_query.pgsql_query()
+        except peewee.InternalError as e:
+            self.dataBase.db.rollback()
         return df

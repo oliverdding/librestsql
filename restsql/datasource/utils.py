@@ -1,5 +1,5 @@
-from restsql.config.settings import EnumDataBase
-from restsql.query import Query
+from restsql.config.database import EnumDataBase
+from restsql.config.model import Query
 
 
 def _build_select(select, time, sql_type):

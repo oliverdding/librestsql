@@ -2,9 +2,10 @@ from elasticsearch import Elasticsearch
 from pydruid.db import connect
 from peewee import PostgresqlDatabase
 from restsql.config.model import *
-
+import os,sys
 __all__ = ['EnumDataBase', 'DataBase', 'db_settings']
-
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+sys.path.append(BASE_DIR)
 
 class EnumDataBase:
     PG = 'PostgreSQL'

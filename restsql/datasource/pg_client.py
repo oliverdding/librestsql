@@ -2,7 +2,7 @@
 
 from restsql.config.model import Client
 from restsql.config.database import EnumDataBase
-from restsql.datasource.util import get_columns, to_sql
+from restsql.datasource.utils import get_columns, to_sql
 from restsql.config.model import Query
 import pandas as pd
 import psycopg2
