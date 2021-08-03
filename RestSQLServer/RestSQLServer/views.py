@@ -1,55 +1,56 @@
 import logging
 
-from django.http import HttpResponse
-from django.views.decorators.http import require_GET
+from django.http import HttpResponse, HttpResponseBadRequest
+from django.views.decorators.http import require_POST
 import json
+import sys
+
+sys.path.extend([r'E:\f1ed-restsql-librestsql-master'])
 from restsql import rest_client
-from .util import ExceptionEnum
-from .util import ResponseModel
-from .util import frame_parse_obj
+
+from .config.exception import JsonFormatException, RunningException, UserConfigException, RestSqlExceptionBase, \
+    ProgramConfigException
+from .utils import ResponseModel
+from .utils import frame_parse_obj
 from restsql.config.database import db_settings
 
 
-def testSourceView(request):
+def test(request):
     return HttpResponse('pk')
 
 
-def searchSourceView(request):
+def grafana_search(request):
     return HttpResponse('ok')
 
 
-def querySourceView(request):
-    restquery = json.loads(request.body)
-    print(restquery)
-
-    from_item = restquery['from']
-    # 这里可以加错误处理
-
-    client = rest_client.Client()
-
-    # 返回结果
-    flag = client.query(restquery)
-    # if flag:
-    #     result = client.result
-    #     return HttpResponse('ok')
-
-    return HttpResponse('false')
+def grafana_query(request):
+    return HttpResponse('ok')
 
 
-@require_GET
+@require_POST
 def apiquery(request):
+    """
+    :param request: 获取请求需要的query,以及而外的参数，如format,额外希望返回的格式
+    :return 默认返回json格式结构数据，除非使用format参数指令其他的返回类型
+    """
     if request.body is None:
-        return HttpResponse(ResponseModel.failure('error'))
-    rest_query = json.loads(request.body)
+        return HttpResponseBadRequest(ResponseModel.failure('error', "Please input the request query"))
+
+    try:
+        rest_query = json.loads(request.body)
+    except JsonFormatException as e:
+        logging.exception(e)
+        return HttpResponseBadRequest(ResponseModel.failure(e.code, e.message))
     return_format = request.GET.get('format', None)
     if not rest_query.get('from', None):
-        return HttpResponse(ResponseModel.failure('error', ExceptionEnum))
-    client = rest_client.Client()
-    flag = client.query(rest_query)
-    if flag is False:
-        return HttpResponse(ResponseModel.failure_response('error', 'unknown error'))
-    resp = ResponseModel.success(frame_parse_obj(client.result, return_format))
-    return HttpResponse(json.dumps(resp))
+        return HttpResponse(ResponseModel.failure('400', "You need to specify the target data source"))
+    try:
+        client = rest_client.RestClient(rest_query)
+        result = client.query()
+    except RestSqlExceptionBase as e:
+        return HttpResponse(ResponseModel.failure(e.code, "The query failed，the error message: {}".format(e.message)))
+    resp = frame_parse_obj(result, return_format)  # 如果是不指明以txt,或者html格式的，在内部进行转json返回
+    return HttpResponse(resp)
 
 
 def table_query(request):
@@ -65,13 +66,13 @@ def table_query(request):
             table_dict[getattr(t, 'table_name')] = list(
                 getattr(t, 'fields').keys())  # {'table_name':['column1','column2']
         try:
-            resp = json.dumps(ResponseModel.success(table_dict))
-        except Exception as e:
+            resp = ResponseModel.success(table_dict)  # 内置转json
+        except JsonFormatException as e:
             logging.exception(e)
-            raise Exception("parse table_dict to json error")
+            return HttpResponseBadRequest(ResponseModel.failure(e.code, "parse table_dict to json error"))
         return HttpResponse(resp)
     else:
-        return HttpResponse(json.dumps(ResponseModel.failure('bad', ExceptionEnum.RequestMethodError)))
+        return HttpResponseBadRequest(ResponseModel.failure("400", "Incorrect request method"))
 
 
 def database_query(request):
@@ -84,13 +85,9 @@ def database_query(request):
             databases.append(k)
         try:
             resp = json.dumps(ResponseModel.success(databases))
-        except Exception as e:
+        except JsonFormatException as e:
             logging.exception(e)
-            raise Exception("parse database_list to json error")
+            return HttpResponseBadRequest(ResponseModel.failure(e.code, "parse table_dict to json error"))
         return HttpResponse(resp)
     else:
-        return HttpResponse(json.dumps(ResponseModel.failure('bad', ExceptionEnum.RequestMethodError)))
-
-
-def helloword(request):
-    return HttpResponse('ok')
+        return HttpResponseBadRequest(ResponseModel.failure("400", "Incorrect request method"))
