@@ -1,7 +1,7 @@
 # encoding=utf-8
 
-from restsql.config.settings import DataBase, EnumDataBase
-from restsql.datasource.druid_client import DruidClient
+from restsql.config.database import DataBase, EnumDataBase
+from restsql.datasource.client import DruidClient
 from restsql.query import Query
 import json
 

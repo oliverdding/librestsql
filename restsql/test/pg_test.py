@@ -42,7 +42,8 @@ data_json = '''
      "limit":1000
   }
 '''
-database = DataBase(name='test', db_type=EnumDataBase.PG, port='5432',db_name='test',
+
+database = DataBase(name='test', db_type=EnumDataBase.PG, port='5432', db_name='test',
                     host='localhost', user='postgres', password='12345')
 query = Query(json.loads(data_json))
 client = PgClient(database)

@@ -1,30 +1,37 @@
 # encoding=utf-8
-from restsql.datasource.es_client import *
-from restsql.config.settings import *
+
+from restsql.check import check
+from restsql.datasource.sql_entry import *
+from restsql.config.database import *
+from restsql.datasource.client import *
 
 
-class restClient:
+__all__ = ['RestClient']
+
+
+class RestClient:
     """
     restsql主要服务类，服务器端调用，输入请求协议，输出DataFrame
     内部实现：
     根据请求协议识别查询的数据源，通过调用相应数据源的Client服务类，输出DataFrame
-    TODO 封装了请求协议还未修改
     """
 
     def __init__(self, query_dict):
-        self.query_dict = query_dict
+        self.query_instance = Query(query_dict)
 
     # 供服务器端调用的接口
     def query(self):
-        db_name = self.query_dict["from"].split(".")[0]
+        # 进行格式检查
+        if self.query_instance.target is None:
+            raise RuntimeError("The query target is empty")
+        db_name = self.query_instance.target.split(".")[0]
         # 获取DataBase对象
-        dataBase = db_configs.get_by_dbname(db_name)
-        if dataBase.db_type == EnumDataBase.ES:
-            client = EsClient(dataBase)
-            return client.es_query(self.query_dict)
-        elif dataBase.db_type == EnumDataBase.PG:
-            client = PgClient(dataBase)
-            return client.pg_query(self.query_dict)
-        elif dataBase.db_type == EnumDataBase.DRUID:
-            client = DruidClient(dataBase)
-            return client.druid_query(self.query_dict)
+        database = db_settings.get_by_name(db_name)
+        check(self.query_instance, database)
+        if database.db_type == EnumDataBase.ES:
+            client = EsClient(database)
+        elif database.db_type == EnumDataBase.PG:
+            client = PgClient(database)
+        else:
+            client = DruidClient(database)
+        return client.query(self.query_instance)

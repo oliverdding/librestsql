@@ -1,22 +1,8 @@
 # -*- coding:utf-8 -*-
 
-class Table(object):
-    """
-    子类需要包含table_name=”  “
-              fields={
-                ”字段名：”字段类型“,,,
-              }
-    """
-    pass
-
 
 class Field(object):
     pass
-
-
-"""
-如果要采用orm需要使用的类型映射类
-"""
 
 
 class IntField(Field):
@@ -43,5 +29,19 @@ class StringField(Field):
 class BoolField(Field):
     """
     布尔类型: BooleanField
+    """
+    pass
+
+
+class TimeField(Field):
+    """
+    时间类型 DateTimeField
+    """
+    pass
+
+
+class Table(object):
+    """
+    Schema基类
     """
     pass

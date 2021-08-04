@@ -1,17 +1,20 @@
 # -*- coding:UTF-8 -*-
 import json
 import logging
+import os
+import yaml
 
 from restsql.config.database import EnumDataBase, db_settings
-from restsql.config.table import NumberField, StringField, BoolField, IntField, Table
+from restsql.config.table import NumberField, StringField, BoolField, IntField, TimeField, Table
 
-__all__ = ['init_json']
+__all__ = ['init_yaml', 'CONF_RESTSQL_PATH']
+
 logger = logging.getLogger("restsql_load")
+curPath = os.path.dirname(os.path.realpath(__file__))
+CONF_RESTSQL_PATH = os.getenv('CONF_RESTSQL_PATH', curPath + '/restsql.yml')  # 导入配置文件路径
 
-table_map = {}
 
-
-# 注意dbsetting模块的导入的方式
+# 注意db_setting模块的导入的方式
 def get_db_type(db_type):
     if db_type == "PG":
         return EnumDataBase.PG
@@ -20,17 +23,15 @@ def get_db_type(db_type):
     elif db_type == "ES":
         return EnumDataBase.ES
     else:
-        logger.critical("载入数据源配置出错: 无法识别的数据库类型: %s", db_type)
-        raise Exception("载入数据源配置出错: 无法识别的数据库类型: {}".format(db_type))
+        logger.critical("载入数据源配置出错: 无法识别数据库类型: %s", db_type)
+        raise Exception("载入数据源配置出错: 无法识别数据库类型: {}".format(db_type))
 
 
-def init_json():
-    configjson = None
-    with open("restsql.conf", "r") as fp:
-        configjson = json.load(fp, strict=False)
-        logger.debug("载入配置文件: %s", configjson)
+def init_yaml(path):
+    with open(path, "r", encoding="utf-8") as fp:  # 配置文件由configmap挂载到镜像路径后传入
+        config = yaml.safe_load(fp)
     temp_map = {}
-    for table_config in configjson.get("tables", []):
+    for table_config in config.get("tables", []):
         table_name = table_config.get("table_name")
         fields = {}
         for (k, v) in table_config.get("fields").items():
@@ -42,6 +43,8 @@ def init_json():
                 fields[k] = NumberField()
             elif v == "BoolField":
                 fields[k] = BoolField()
+            elif v == "TimeField":
+                fields[k] = TimeField()
             else:
                 logger.critical("载入数据源配置出错: 无法识别的字段类型: %s", v)
                 raise Exception("载入数据源配置出错: 无法识别的字段类型: {}".format(v))
@@ -53,7 +56,7 @@ def init_json():
             动态创建类 该类继承 Table
         """
         temp_map[table_name] = table
-    for db_setting_config in configjson.get("db_settings", []):
+    for db_setting_config in config.get("db_settings", []):
         name = db_setting_config.get("name")
         tables = []
         for table_name in db_setting_config.get("tables", []):
@@ -74,3 +77,4 @@ def init_json():
             black_tables=db_setting_config.get("black_tables", None),
             black_fields=db_setting_config.get("black_fields", None),
         )
+
