@@ -1,8 +1,8 @@
 # encoding=utf-8
-from restsql.datasource.sql_entry import *
-from restsql.config.database import *
-from restsql.datasource.client import *
-from restsql.check import *
+from restsql.config.database import db_settings,EnumDataBase
+from restsql.datasource.client import PgClient, EsClient, DruidClient
+from restsql.check import check
+from restsql.query import Query
 
 __all__ = ['RestClient']
 
@@ -22,7 +22,7 @@ class RestClient:
         # 进行格式检查，过滤掉非法字符，避免sql注入
         table_name = self.query_instance.target.split(".")[1]
         print(table_name)
-        _check(self.query_instance, table_name)
+        # check(self.query_instance, table_name)
         if self.query_instance.target is None:
             raise RuntimeError("The query target is empty")
         db_name = self.query_instance.target.split(".")[0]

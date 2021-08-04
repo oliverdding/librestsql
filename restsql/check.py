@@ -1,6 +1,6 @@
-from restsql.query import *
+from restsql.query import Query
 import re
-__all__ = ['_check']
+__all__ = ['check']
 
 
 def _check_op(op):
@@ -39,7 +39,7 @@ def _check_column(column):
         raise RuntimeError('Field "{}" error'.format(column))
 
 
-def _check(que: Query, table_name):
+def check(que: Query, table_name):
     """
     检查表名以及所有字段名是否符合规范（只支持中文，大小写字母，数字，下划线）
     检查操作符op以及聚合函数metric是否支持

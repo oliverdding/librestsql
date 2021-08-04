@@ -11,9 +11,9 @@ sys.path.append(BASE_DIR)
 
 
 class EnumDataBase:
-    PG = 'PostgreSQL'
-    ES = 'Elasticsearch'
-    DRUID = 'Druid'
+    PG = 'PG'
+    ES = 'ES'
+    DRUID = 'DRUID'
 
 
 class DataBase:
