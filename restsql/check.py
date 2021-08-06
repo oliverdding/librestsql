@@ -1,5 +1,7 @@
-from restsql.query import Query
+from restsql.config.database import DataBase
+from restsql.query import *
 import re
+
 __all__ = ['check']
 
 
@@ -23,8 +25,7 @@ def _check_metric(metric):
     :return:
     """
     legal_metric = ['', 'SUM', 'sum', 'AVG', 'avg', 'COUNT', 'count', 'MAX', 'max'
-                                                                             'MIN', 'min', 'COUNT DISTINCT',
-                    'count distinct']
+                    'MIN', 'min', 'COUNT DISTINCT', 'count distinct']
     if metric not in legal_metric:
         raise RuntimeError('"{metric}" metric is not supported'.format(metric=metric))
 
@@ -35,20 +36,38 @@ def _check_column(column):
     :param column: 字段名
     :return:
     """
-    if re.match(pattern=r'^[\u4E00-\u9FA5A-Za-z0-9_]+$', string=column) is not None:
+    if re.match(pattern=r'[\u4E00-\u9FA5A-Za-z0-9_*]+$', string=column) is None:
         raise RuntimeError('Field "{}" error'.format(column))
 
 
-def check(que: Query, table_name):
+def _check_blacklist(que: Query, database: DataBase):
     """
-    检查表名以及所有字段名是否符合规范（只支持中文，大小写字母，数字，下划线）
-    检查操作符op以及聚合函数metric是否支持
-    :param que: 包含查询信息的Query封装对象
-    :param table_name: 表名
+    检查所需查询的表和字段是否在黑名单里
+    :param que:
+    :param database:
     :return:
     """
+    table = que.target.split('.')[1]
+    if table in database.black_tables:
+        raise RuntimeError('Table "{}" access denied'.format(table))
+    if table in database.black_fields:
+        for c in que.select_list:
+            if c['column'] in database.black_fields[table]:
+                raise RuntimeError('Field "{}" access denied'.format(c['column']))
+
+
+def check(que: Query, database: DataBase):
+    """
+    检查表名以及所有字段名是否符合规范（只支持中文，大小写字母，数字，下划线）
+    检查操作符op以及聚合函数metric是否支持,以及访问的字段和表在不在黑名单里
+    :param database:
+    :param que: 包含查询信息的Query封装对象
+    :return:
+    """
+    # 检查字段以及表名是否在黑名单内
+    _check_blacklist(que, database)
     # 检查表名是否符合规范
-    _check_column(table_name)
+    _check_column(que.target.split('.')[1])
     # 检查SELECT中是否有非法字符
     for s in que.select_list:
         # 遍历每个select字典
@@ -58,7 +77,7 @@ def check(que: Query, table_name):
             if k == 'column':
                 _check_column(v)
 
-    # 检查WHERE中是否有非法字符
+    # 检查WHERE中字段是否符合规范
     for f in que.where_list:
         # 遍历每个where字典
         for k, v in f.items():

@@ -16,7 +16,7 @@ from restsql.config.database import db_settings
 
 
 def test(request):
-    return HttpResponse('pk')
+    return HttpResponse('ok')
 
 
 def grafana_search(request):
@@ -24,7 +24,37 @@ def grafana_search(request):
 
 
 def grafana_query(request):
-    return HttpResponse('ok')
+    print("grafana请求测试")
+    print(json.loads(request.body))
+    test = [
+        {
+            "target": "upper_75",
+            "datapoints": [
+                [622, 1450754160000],
+                [365, 1450754220000],
+                [465, 1450764220000],
+                [665, 1450774220000],
+                [865, 1450784220000],
+                [265, 1450794220000],
+                [665, 1450804220000],
+                [865, 1450814220000],
+                [965, 1450824220000],
+
+            ]
+        },
+        {
+            "target": "upper_90",
+            "datapoints": [
+                [861, 1450754160000],
+                [767, 1450754220000]
+            ]
+        }
+    ]
+    result = {'status': 'ok',
+              'data':test}
+    print("grafana 测试返回结果")
+    print(json.dumps(result))
+    return HttpResponse(json.dumps(result))
 
 
 @require_POST

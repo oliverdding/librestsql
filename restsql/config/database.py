@@ -1,6 +1,5 @@
 from elasticsearch import Elasticsearch
 from pydruid.db import connect
-from peewee import PostgresqlDatabase
 import os
 import sys
 import psycopg2
@@ -63,19 +62,38 @@ class DataBase:
             self.black_fields = black_fields
         else:
             raise RuntimeError("Dict of table_name: [field_name] needed.")
-
-    def connect_db(self):
-        if self.db_type == EnumDataBase.PG:
-            if self.db_name is None or self.port is None or self.user is None or self.password is None:
+        # 初始化连接Postgre
+        if db_type == EnumDataBase.PG:
+            if db_name is None or port is None or user is None or password is None:
                 raise RuntimeError("Empty elements in PgSQL")
-            return psycopg2.connect(database=self.db_name, user=self.user,
-                                    password=self.password, host=self.host, port=self.port)
-        elif self.db_type == EnumDataBase.DRUID:
-            if self.host is None or self.port is None:
+            self.conn = psycopg2.connect(database=db_name, user=user, password=password,
+                                         host=host, port=port, keepalives=1)
+        # 初始化连接Postgre
+        elif db_type == EnumDataBase.DRUID:
+            if host is None or port is None:
                 raise RuntimeError("Empty elements in Druid")
-            return connect(host=self.host, port=self.port)
-        elif self.db_type == EnumDataBase.ES:
+            self.conn = connect(host=host, port=port)
+
+    # 暂时留给ES做兼容处理
+    def connect_db(self):
+        if self.db_type == EnumDataBase.ES:
             return Elasticsearch(self.host + ":" + str(self.port))
+
+    # 重新连接数据库
+    def re_connect(self):
+        print('数据库进行了重启')
+        self.conn.close()
+        if self.db_type == EnumDataBase.PG:
+            self.conn = psycopg2.connect(database=self.db_name, user=self.user, password=self.password,
+                                         host=self.host, port=self.port, keepalives=1)
+        elif self.db_type == EnumDataBase.DRUID:
+            self.conn = connect(host=self.host, port=self.port)
+
+    # 获取数据库的连接对象（留以在取出连接对象时，确认其处于活动状态）
+    def get_conn(self):
+        if self.conn.closed:
+            self.re_connect()
+        return self.conn
 
 
 class _DbSettings:

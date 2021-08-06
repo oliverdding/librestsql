@@ -56,7 +56,7 @@ def _build_select(select, time, sql_type):
     # 将每次得到的部分sql语句放在一个列表中，最后调用join连接在一起，避免浪费内存
     sql_list = []
     # 判断时间这一字段是否设置
-    if len(time['column']) > 0:
+    if time and 'column' in time and len(time['column']) > 0:
         time_select_sql = ''  # 时间这一字段的SELECT的SQL语句
         # 判断属于什么类型的SQL（比如Druid和Postgre在时间处理上有些许不同）
         if sql_type == EnumDataBase.DRUID:
@@ -105,12 +105,12 @@ def _build_filter(filters, time, param_dic):
     :return: WHERE这一部分带占位符的SQL代码
     """
     # 若没有任何过滤条件（包括时间）
-    if len(time['column']) == 0 and len(filters) == 0:
+    if (not time or 'column' not in time or len(time['column']) == 0) and len(filters) == 0:
         return ''
     # 将每次得到的部分sql语句放在一个列表种，最后调用join连接在一起，避免浪费内存
     filter_list = []
     # 若存在时序字段，则将此添加到第一个filter（当无时序字段的时候，相当于普通的表查询）
-    if len(time['column']) > 0:
+    if time and 'column' in time and len(time['column']) > 0:
         filter_list.append("\"{time}\">='{begin}' ".format(time=time['column'], begin=time['begin']))
         filter_list.append("\"{time}\"<='{end}' ".format(time=time['column'], end=time['end']))
     for f in filters:
@@ -134,7 +134,8 @@ def _filter_handler(filter_dic, param_dic):
     if filter_dic['op'] not in filter_op.keys():
         # 直接将value的值加入到param_list中
         param_dic[str(len(param_dic))] = filter_dic['value']
-        return "\"{column}\" {op} %({index})s ".format(column=filter_dic['column'], op=filter_dic['op'], index=str(len(param_dic) - 1))
+        return "\"{column}\" {op} %({index})s ".format(column=filter_dic['column'], op=filter_dic['op'],
+                                                       index=str(len(param_dic) - 1))
     # 对filter_op里的操作符的处理
     # 将value更改为filter_op中对应比较符所需要的格式再添加到param_dic里
     param_dic[str(len(param_dic))] = filter_op[filter_dic['op']].replace('?', filter_dic['value'])
@@ -150,19 +151,19 @@ def _build_group(group_list, time, sql_type):
     :return: GROUP这一部分的SQL代码
     """
     # 若既没时序字段也没任何需要分组的字段，直接返回空字符串
-    if len(time['column']) == 0 and len(group_list) == 0:
+    if (not time or 'column' not in time or len(time['column']) == 0) and len(group_list) == 0:
         return ''
     res_list = []
     # 判断sql类型（在group处理上pg和druid有不同，druid需要加单引号，pg为了区分大小写，同一加双引号）
     if sql_type == EnumDataBase.DRUID:
-        # 若存在时序字段，则置首位为1
-        if len(time['column']) > 0:
+        # 若存在时序字段，则将时序字段放在第一个GROUP
+        if time and 'column' in time and len(time['column']) > 0:
             res_list.append('1')
-        res_list.extend(["'{}'".format(i) for i in group_list])
+        res_list.extend(["{}".format(i) for i in group_list])
     elif sql_type == EnumDataBase.PG:
         # 若存在时序字段，则将时序字段放在第一个GROUP
-        if len(time['column']) > 0:
-            res_list.append('time')
+        if time and 'column' in time and len(time['column']) > 0:
+            res_list.append('"{}"'.format(time['column']))
         res_list.extend(['"{}"'.format(i) for i in group_list])
     return 'GROUP BY {} '.format(','.join(res_list))
 
@@ -173,19 +174,20 @@ def to_sql(que: Query, sql_type, schema=None):
     :param schema: schema对象,例如postgre里的public
     :param sql_type: 需要生成的Sql类型，比如Druid或Postgresql
     :param que: 包含查询所需信息的Query对象
-    :return: 带占位符的普通SQL语句和where部分的参数列表构成的元组，列如('SELECT name, price FROM sale WHERE price >= %s', ['100'])
+    :return: 带占位符的普通SQL语句和where部分的参数字典构成的元组，列如('SELECT name, price FROM sale WHERE price >= %(price)s', ['price':'100'])
     """
     # where中的value构成的字典
     param_dic = {}
     if schema is None:
         source = 'FROM "{}" '.format(que.target.split('.')[1])  # 数据源
     else:
-        source = 'FROM "{}"."{}" '.format(schema, que.From.split('.')[1])  # 数据源
+        source = 'FROM "{}"."{}" '.format(schema, que.target.split('.')[1])  # 数据源
     select = _build_select(que.select_list, que.time_dict, sql_type)  # 字段这部分sql
     filters = _build_filter(que.where_list, que.time_dict, param_dic)  # 过滤条件
     group = _build_group(que.group_list, que.time_dict, sql_type)  # 分组
     limit = 'LIMIT ' + str(que.limit)  # 数据量
     sql = select + source + filters + group + limit  # 最终的sql拼接
+    print(sql,param_dic)
     return sql, param_dic
 
 
@@ -196,7 +198,7 @@ def get_columns(que: Query):
     :return: 所有字段名构成的列表
     """
     columns = []  # 默认把时间添加到第一个列
-    if len(que.time_dict['column']) > 0:
+    if que.time_dict and 'column' in que.time_dict and len(que.time_dict['column']) > 0:
         columns.append('time')
     # 获取返回结果的名字（字段名或别名）
     for i in que.select_list:
@@ -205,5 +207,3 @@ def get_columns(que: Query):
             c = i['alias']
         columns.append(c)
     return columns
-
-

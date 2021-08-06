@@ -25,7 +25,7 @@ db_settings:
     db_name: xinan
     black_tables: []
     black_fields:
-      a:
+      blacktable_1:
         - test1
         - test2
   - name: source2
@@ -38,3 +38,14 @@ db_settings:
     password: zhang23785491
     db_name: testdjango
     schema: public
+  - name: druid_test
+    tables:
+      - wikipedia
+    db_type: DRUID
+    host: localhost
+    port: '8888'
+    black_tables: []
+    black_fields:
+      a:
+        - test1
+        - test2

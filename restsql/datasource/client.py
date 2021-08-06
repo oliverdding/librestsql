@@ -35,13 +35,14 @@ class DruidClient(Client):
 
     def query(self, que):
         sql, param_dic = to_sql(que, EnumDataBase.DRUID, self.database.schema)
+        conn = self.database.get_conn()
         try:
-            conn = self.database.connect_db()
             curs = conn.cursor()
             curs.execute(sql, param_dic)
         except CompileError as e:
             raise e
         res = curs.fetchall()
+        curs.close()
         columns = get_columns(que)
         return pd.DataFrame(data=res, columns=columns)
 
@@ -53,7 +54,7 @@ class PgClient(Client):
 
     def query(self, que: Query):
         sql, param_dic = to_sql(que, EnumDataBase.PG, self.database.schema)
-        conn = self.database.connect_db()
+        conn = self.database.get_conn()
         columns = get_columns(que)
         # 调用数据库，得到sql语句查询的结果
         try:
@@ -61,13 +62,14 @@ class PgClient(Client):
                 cursor.execute(sql, param_dic)
                 rows = cursor.fetchall()
         except psycopg2.Error as e:
+            # 若查询过程中出现问题，则重新建立连接，并抛出错误
+            self.database.re_connect()
             raise e
         # 以dataFrame格式返回
         res = pd.DataFrame(data=rows, columns=columns)
         return res
 
 
-# 这段还未整合，等接下来，es端处理进行整合
 class EsClient(Client):
     """
     Es数据源服务类，供restSqlClient调用
