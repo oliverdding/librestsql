@@ -1,7 +1,7 @@
 # encoding=utf-8
 
-from restsql.config.settings import DataBase, EnumDataBase
-from restsql.datasource.pg_client import PgClient
+from restsql.config.database import DataBase, EnumDataBase
+from restsql.datasource.client import PgClient
 from restsql.query import Query
 import json
 
@@ -9,36 +9,31 @@ data_json = '''
 {
     "from":"test.sale",
     "time":{
-      "column":"create_time",
+      "column":"",
       "begin":"2021-7-20",
       "end":"2021-7-30",
       "interval":"1d"
     },
     "select":[
       {
+        "column":"name",
+        "alias":"",
+        "metric":""
+      },
+      {
         "column":"price",
-        "alias":"平均金额",
+        "alias":"平均价格",
         "metric":"avg"
-      },
-      {
-        "column":"price",
-        "alias":"总额",
-        "metric":"sum"
-      },
-      {
-        "column":"price",
-        "alias":"订单数",
-        "metric":"count"
       }
     ],
     "where":[
       {
        "column":"price",
        "op": "<=",
-       "value": "100"
+       "value": "200"
       }
     ],
-    "group":[],
+    "group":["name"],
      "limit":1000
   }
 '''

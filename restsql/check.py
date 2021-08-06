@@ -25,8 +25,7 @@ def _check_metric(metric):
     :return:
     """
     legal_metric = ['', 'SUM', 'sum', 'AVG', 'avg', 'COUNT', 'count', 'MAX', 'max'
-                                                                             'MIN', 'min', 'COUNT DISTINCT',
-                    'count distinct']
+                    'MIN', 'min', 'COUNT DISTINCT', 'count distinct']
     if metric not in legal_metric:
         raise RuntimeError('"{metric}" metric is not supported'.format(metric=metric))
 
@@ -37,7 +36,7 @@ def _check_column(column):
     :param column: 字段名
     :return:
     """
-    if re.match(pattern=r'^[\u4E00-\u9FA5A-Za-z0-9_]+$', string=column) is None:
+    if re.match(pattern=r'[\u4E00-\u9FA5A-Za-z0-9_*]+$', string=column) is None:
         raise RuntimeError('Field "{}" error'.format(column))
 
 
@@ -51,7 +50,7 @@ def _check_blacklist(que: Query, database: DataBase):
     table = que.target.split('.')[1]
     if table in database.black_tables:
         raise RuntimeError('Table "{}" access denied'.format(table))
-    if table in database.black_fields.keys():
+    if table in database.black_fields:
         for c in que.select_list:
             if c['column'] in database.black_fields[table]:
                 raise RuntimeError('Field "{}" access denied'.format(c['column']))
