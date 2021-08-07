@@ -70,7 +70,6 @@ class PgClient(Client):
         return res
 
 
-# 这段还未整合，等接下来，es端处理进行整合
 class EsClient(Client):
     """
     Es数据源服务类，供restSqlClient调用

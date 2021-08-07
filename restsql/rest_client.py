@@ -27,6 +27,8 @@ class RestClient:
         db_name = self.query_instance.target.split(".")[0]
         # 获取DataBase对象
         database = db_settings.get_by_name(db_name)
+        if database is None:
+            raise RuntimeError("no find the target table")
         check(self.query_instance, database)
         if database.db_type == EnumDataBase.ES:
             client = EsClient(database)

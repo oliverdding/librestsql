@@ -78,7 +78,7 @@ def _build_select(select, time, sql_type):
     # 遍历生成所有字段的SQL代码
     for s in select:
         # 判断是否使用聚合函数
-        if len(s['metric']) > 0:
+        if 'metric' in s and len(s['metric']) > 0:
             # count distinct使用格式较为特殊，单独处理
             if s['metric'] in ['COUNT DISTINCT', 'count distinct']:
                 sql_list.append('COUNT(DISTINCT "{column}") '.format(column=s['column']))
@@ -87,7 +87,7 @@ def _build_select(select, time, sql_type):
         else:
             sql_list.append('"{column}" '.format(column=s['column']))
         # 判断是否有别名
-        if len(s['alias']) > 0:
+        if 'alias' in s and len(s['alias']) > 0:
             sql_list.append(
                 'AS {alias} '.format(alias=s['alias'])
             )
@@ -203,7 +203,7 @@ def get_columns(que: Query):
     # 获取返回结果的名字（字段名或别名）
     for i in que.select_list:
         c = i['column']
-        if len(i['alias']) > 0:
+        if 'alias' in i and len(i['alias']) > 0:
             c = i['alias']
         columns.append(c)
     return columns

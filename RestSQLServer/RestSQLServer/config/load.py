@@ -11,7 +11,7 @@ __all__ = ['init_yaml', 'CONF_RESTSQL_PATH']
 
 logger = logging.getLogger("restsql_load")
 curPath = os.path.dirname(os.path.realpath(__file__))
-CONF_RESTSQL_PATH = os.getenv('CONF_RESTSQL_PATH', curPath + '/restsql.yml')  # 导入配置文件路径
+CONF_RESTSQL_PATH = os.getenv('CONF_RESTSQL_PATH', curPath + '/restsql.yaml')  # 导入配置文件路径
 
 
 # 注意db_setting模块的导入的方式
