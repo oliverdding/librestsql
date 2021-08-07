@@ -9,7 +9,7 @@ __all__ = ['Query']
 class Query:
     def __init__(self, query_dict):
         """
-        :param query_dict: 请求协议字典
+        :param query_dict: 将请求协议字典封装为类，并将协议缺失部分置空
         """
         self.target = query_dict.get("from", "")
         self.time_dict = query_dict.get("time", {})

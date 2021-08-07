@@ -1,23 +1,28 @@
 # encoding=utf-8
 
-from restsql.rest_client import restClient
-from restsql.config.settings import *
+from restsql.rest_client import *
+from restsql.config.database import *
 
 if __name__ == '__main__':
     query_dict = {
-        "from": "es_test.car__",
+        "from": "es_test.cars",
         "time": {
-            "column": 'sold',
+            "column": '',
             "begin": "",
             "end": "",
-            "interval": "1M"
+            "interval": ""
         },
         "select": [
             {
                 "column": "price",
-                "alias": "price_sum",
-                "metric": "sum"
-            }
+                "alias": "价格",
+                "metric": ""
+            },
+            {
+                "column": "make",
+                "alias": "制造商",
+                "metric": ""
+            },
         ],
         "where": [
             {
@@ -26,7 +31,8 @@ if __name__ == '__main__':
                 "value": "red"
             }
         ],
-        "group": []
+        "group": [],
+        "limit": 2
     }
     db_settings.add(
         name='es_test',

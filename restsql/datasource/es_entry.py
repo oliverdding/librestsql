@@ -1,33 +1,17 @@
 import pandas as pd
 import json
 
-
 _all_ = ['EsQuery']
 
 
 class EsQuery:
     """
-    将请求协议转译为Es—DSL查询语句
+    将请求协议转译为ES—DSL查询语句
     """
 
     def __init__(self, query):
         """
         :param query: 请求协议封装对象
-        格式：{
-              "from":"",
-              "time":{
-                "column":"",
-                "begin":"",
-                "end":"",
-                "interval":""
-              },
-              "select":[
-                {
-                  "column":"",
-                  "alias":"",
-                  "metric":""
-                }
-                .....
         """
         self.limit = 1000
         if query.limit is not None:
@@ -63,17 +47,16 @@ class EsQuery:
         self.dsl_aggs = self.dsl['aggs']['groupby']['aggs']
 
     def _parse_fields(self):
-        if self.time["interval"] is None or self.time["interval"] == "":
-            if len(self.group_list) == 0:
-                self.dsl['_source']['includes'].append(self.time["column"])
+        """
+        return:DSL中增加将select部分的字段
+        """
         for s in self.select_list:
             self.dsl['_source']['includes'].append(s["column"])
 
     def _parse_where(self):
         """
         过滤操作暂时仅支持了and
-        后续商讨后进行修改
-        :return:
+        :return:DSL中加入where筛选条件以及time字段的范围筛选
         """
         for filter_dic in self.where_list:
             if filter_dic["op"] == "=":
@@ -147,13 +130,13 @@ class EsQuery:
             else:
                 raise SyntaxError('cat not support op: {0}, field: {1}'.format(filter_dic["op"], filter_dic["column"]))
             # 请求协议输入必须为yyyy-MM-dd之类的格式且必须补足位数
-        if self.time["begin"] is not None and self.time["begin"] != "":
+        if self.time.get("begin", "") != "":
             self.dsl_where.append({
                 'range': {
                     self.time["column"]: {'gte': self.time["begin"]}
                 }
             })
-        if self.time["end"] is not None and self.time["end"] != "":
+        if self.time.get("end", "") != "":
             self.dsl_where.append({
                 'range': {
                     self.time["column"]: {'lte': self.time["end"]}
@@ -163,13 +146,16 @@ class EsQuery:
             del self.dsl["query"]
 
     def _parse_metric(self):
-        func_map = {'count': 'value_count','sum': 'sum', 'avg': 'avg', 'max': 'max', 'min': 'min',
+        """
+        :return:  DSL中加入select中的聚合指标
+        """
+        func_map = {'count': 'value_count', 'sum': 'sum', 'avg': 'avg', 'max': 'max', 'min': 'min',
                     'count distinct': 'cardinality'}
         for s in self.select_list:
-            if s["metric"] in func_map.keys() and s["metric"]!="count":
+            if s["metric"] in func_map.keys() and s["metric"] != "count":
                 self.dsl_aggs[s["alias"]] = {func_map[s["metric"]]: {'field': s["column"]}}
-            elif s["metric"]=="count":
-                self.dsl_aggs[s["alias"]] = {func_map[s["metric"]]: {'field': s["column"]+".keyword"}}
+            elif s["metric"] == "count":
+                self.dsl_aggs[s["alias"]] = {func_map[s["metric"]]: {'field': s["column"] + ".keyword"}}
             else:
                 if s["metric"] == "" or s["metric"] is None:
                     continue
@@ -177,10 +163,16 @@ class EsQuery:
         pass
 
     def _parse_composite(self):
+        """
+        :return: DSL加入分组以及时间聚合部分，若用户未指定Interval则默认为1s
+        """
         for g in self.group_list:
             sources_dict = {g: {"terms": {"field": g + ".keyword"}}}
             self.dsl_composite.append(sources_dict)
-        if self.time["interval"] is not None and self.time["interval"] != "":
+        # 如果用户未填interval值，interval默认值为1s
+        if len(self.time) != 0 and self.time.get("column", "") != "":
+            if self.time.get("interval", "") == "":
+                self.time["interval"] = "1s"
             sources_dict = {self.time["column"]: {"date_histogram": {"field": self.time["column"]}}}
             sources_dict[self.time["column"]]["date_histogram"]["interval"] = self.time["interval"]
             sources_dict[self.time["column"]]["date_histogram"]["format"] = "yyyy-MM-dd HH:mm:ss"
@@ -190,11 +182,10 @@ class EsQuery:
         else:
             self.dsl["size"] = 0
             self.dsl['aggs']['groupby']['composite']['size'] = self.limit
-            if self.time["interval"] is None or self.time["interval"] == "":
-                raise Exception("time字段必须指定interval")
 
     def parse(self):
         """
+        EsClient类调用的接口
         :return: 完整的DSL语句
         """
         self.dsl["size"] = self.limit
@@ -202,7 +193,5 @@ class EsQuery:
         self._parse_composite()
         self._parse_fields()
         self._parse_metric()
-        #print(self.dsl)
+        print(self.dsl)
         return self.dsl
-
-
