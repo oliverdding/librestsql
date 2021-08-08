@@ -1,5 +1,5 @@
 # encoding=utf-8
-
+import pandas as pd
 from restsql.rest_client import *
 from restsql.config.database import *
 
@@ -7,10 +7,10 @@ if __name__ == '__main__':
     query_dict = {
         "from": "es_test.cars",
         "time": {
-            "column": '',
-            "begin": "",
-            "end": "",
-            "interval": ""
+            "column": 'sold',
+            "begin": "2001-08-08",
+            "end": "2019-08-08 01:01:01",
+            "interval": "1s"
         },
         "select": [
             {
@@ -40,5 +40,7 @@ if __name__ == '__main__':
         host='127.0.0.1',
         port=9200
     )
+    print(len(query_dict["time"]["begin"]))
     client = RestClient(query_dict)
-    print(client.query())
+    result = client.query()
+    print(result)

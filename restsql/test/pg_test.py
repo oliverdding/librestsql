@@ -1,9 +1,10 @@
 # encoding=utf-8
 
+import json
 from restsql.config.database import DataBase, EnumDataBase
 from restsql.datasource.client import PgClient
 from restsql.query import Query
-import json
+
 
 data_json = '''
 {

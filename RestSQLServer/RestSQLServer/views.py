@@ -1,18 +1,19 @@
-import logging
-
-from django.http import HttpResponse, HttpResponseBadRequest
-from django.views.decorators.http import require_POST
 import json
+import logging
 import sys
 
-sys.path.extend([r'E:\f1ed-restsql-librestsql-master'])
-from restsql import rest_client
+import pandas as pd
+from django.http import HttpResponse, HttpResponseBadRequest
+from django.views.decorators.http import require_POST, require_GET
 
-from .config.exception import JsonFormatException, RunningException, UserConfigException, RestSqlExceptionBase, \
-    ProgramConfigException
+from restsql import rest_client
+from restsql.config.database import db_settings
+from .config.exception import *
+from .config.load import table_map
 from .utils import ResponseModel
 from .utils import frame_parse_obj
-from restsql.config.database import db_settings
+
+sys.path.extend([r'E:\f1ed-restsql-librestsql-master'])
 
 
 def test(request):
@@ -24,37 +25,110 @@ def grafana_search(request):
 
 
 def grafana_query(request):
-    print("grafana请求测试")
-    print(json.loads(request.body))
-    test = [
-        {
-            "target": "upper_75",
-            "datapoints": [
-                [622, 1450754160000],
-                [365, 1450754220000],
-                [465, 1450764220000],
-                [665, 1450774220000],
-                [865, 1450784220000],
-                [265, 1450794220000],
-                [665, 1450804220000],
-                [865, 1450814220000],
-                [965, 1450824220000],
+    """
+    :param request: 请求对象
+    :return: grafana指定的DataFrame格式
+    """
 
-            ]
-        },
-        {
-            "target": "upper_90",
-            "datapoints": [
-                [861, 1450754160000],
-                [767, 1450754220000]
-            ]
-        }
-    ]
-    result = {'status': 'ok',
-              'data':test}
-    print("grafana 测试返回结果")
-    print(json.dumps(result))
-    return HttpResponse(json.dumps(result))
+    if request.body is None or request.body == "":
+        return HttpResponseBadRequest(ResponseModel.failure('error', "Please input the request query"))
+    try:
+        rest_query = json.loads(request.body)
+    except JsonFormatException as e:
+        logging.exception(e)
+        return HttpResponseBadRequest(ResponseModel.failure(e.code, e.message))
+    # 通过协议的表名在请求协议中添加数据源
+    table_name = rest_query["from"].split(".")[1]
+    rest_query["from"] = table_map.get(table_name, "")
+    if rest_query["from"] == "":
+        raise Exception("Table not found")
+    try:
+        client = rest_client.RestClient(rest_query)
+        result = client.query()
+    except RestSqlExceptionBase as e:
+        return HttpResponse(ResponseModel.failure(e.code, "The query failed，the error message: {}".format(e.message)))
+    # pandas dataFrame转化为grafana的dataframe格式
+    resp = {"fields": []}
+    for column in result.columns:
+        if column == "time":
+            result["time"] = pd.to_datetime(result["time"])
+            fieldDTO = {"name": column, "values": [int(t) // 10 ** 6 for t in result[column].values], "type": "time"}
+        else:
+            fieldDTO = {"name": column, "values": result[column].values.tolist()}
+        resp["fields"].append(fieldDTO)
+    try:
+        result = json.dumps({'status': 'ok',
+                             'data': [resp]})
+    except JsonFormatException as e:
+        logging.exception(e)
+        return HttpResponseBadRequest(ResponseModel.failure(e.code, e.message))
+    return HttpResponse(result)
+
+
+def grafana_tables(request):
+    """
+      查询可选表的接口
+      response:
+      {
+          'status': 'ok',
+          'data': ['...', ...]
+      }
+      """
+    try:
+        resp = json.dumps({
+            'status': 'ok',
+            'data': list(table_map.keys())
+        })
+    except JsonFormatException as e:
+        logging.exception(e)
+        return HttpResponseBadRequest(ResponseModel.failure(e.code, e.message))
+    return HttpResponse(resp)
+
+
+def grafana_options(request):
+    """
+      查询表字段接口
+      request:
+          {
+              'tableName': '...'<String>
+          }
+      response:
+          ['...', ...]
+    """
+    if request.body is None or request.body == "":
+        return HttpResponseBadRequest(ResponseModel.failure('error', "Please input the request query"))
+    try:
+        request_dict = json.loads(request.body)
+    except JsonFormatException as e:
+        logging.exception(e)
+        return HttpResponseBadRequest(ResponseModel.failure(e.code, e.message))
+    table_name = request_dict.get("tableName", "")
+    db_table_name = table_map.get(table_name, None)
+    if db_table_name is None:
+        raise Exception('Could not find table entry: {}'.format(table_name))
+    try:
+        db_name, table_name = db_table_name.split('.', 1)
+    except BaseException:
+        raise Exception('table name {} is invalid'.format(db_table_name))
+    target_table = None
+    for db_setting_name in db_settings.get_all_name():
+        if db_name == db_setting_name:
+            for table in db_settings.get_by_name(db_setting_name).tables:
+                if table.table_name == table_name:
+                    target_table = table
+                    break
+            break  # target db has no target table
+    if target_table is None:
+        raise Exception('Could not find table: {}'.format(db_table_name))
+    try:
+        resp = json.dumps({
+            'status': 'ok',
+            'data': list(target_table.fields.keys())
+        })
+    except JsonFormatException as e:
+        logging.exception(e)
+        return HttpResponseBadRequest(ResponseModel.failure(e.code, e.message))
+    return HttpResponse(resp)
 
 
 @require_POST

@@ -1,5 +1,6 @@
 import pandas as pd
 import json
+import time
 
 _all_ = ['EsQuery']
 
@@ -129,17 +130,17 @@ class EsQuery:
                     }})
             else:
                 raise SyntaxError('cat not support op: {0}, field: {1}'.format(filter_dic["op"], filter_dic["column"]))
-            # 请求协议输入必须为yyyy-MM-dd之类的格式且必须补足位数
+            # 将请求协议的yy:MM:dd hh:mm:ss格式转化为unix时间戳
         if self.time.get("begin", "") != "":
             self.dsl_where.append({
                 'range': {
-                    self.time["column"]: {'gte': self.time["begin"]}
+                    self.time["column"]: {'gte': self.time["begin"].replace(" ", "T", 1)}
                 }
             })
         if self.time.get("end", "") != "":
             self.dsl_where.append({
                 'range': {
-                    self.time["column"]: {'lte': self.time["end"]}
+                    self.time["column"]: {'lte': self.time["end"].replace(" ", "T", 1)}
                 }
             })
         if len(self.dsl_where) == 0:

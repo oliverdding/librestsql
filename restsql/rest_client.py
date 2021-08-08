@@ -1,10 +1,9 @@
 # encoding=utf-8
 
 from restsql.check import check
-from restsql.datasource.sql_entry import *
-from restsql.config.database import *
-from restsql.datasource.client import *
-
+from restsql.query import Query
+from restsql.config.database import db_settings, EnumDataBase
+from restsql.datasource.client import EsClient, PgClient, DruidClient
 
 __all__ = ['RestClient']
 
