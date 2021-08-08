@@ -18,12 +18,7 @@ def frame_parse_obj(df, key='json'):
         return df.to_latex()
     elif key == 'txt':
         return df.to_string()
-    return ResponseModel.success(df.to_dict('records'))
-    """
-     1.默认最终返回是json， ,但是该模板类Response返回时会进行json.dump,所以这里先把dataframe转dict,然后再进行统一转json
-     防止同一个对象连续两次json.dump出现在前端显示时，相关字段被强行转义加'\'
-     2. 该模式下，使用records模式反序列化，如需要更换返回的表结构模式，具体查阅pandas to_dict文档
-    """
+    return ResponseModel.success(df.to_json(orient="columns", force_ascii=False))  # 默认是json，其他的形式不转化
 
 
 class ResponseModel:

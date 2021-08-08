@@ -13,8 +13,16 @@ logger = logging.getLogger("restsql_load")
 curPath = os.path.dirname(os.path.realpath(__file__))
 CONF_RESTSQL_PATH = os.getenv('CONF_RESTSQL_PATH', curPath + '/restsql.yaml')  # 导入配置文件路径
 
+"""
+提供根据表名定位到数据源的映射
+{
+    "table_name": "datasource_name:table_name"
+}
+"""
+table_map = {}
 
-# 注意dbsetting模块的导入的方式
+
+# 注意db_setting模块的导入的方式
 def get_db_type(db_type):
     if db_type == "PG":
         return EnumDataBase.PG
@@ -30,10 +38,10 @@ def get_db_type(db_type):
 def init_yaml(path):
     with open(path, "r", encoding="utf-8") as fp:  # 配置文件由configmap挂载到镜像路径后传入
         config = yaml.safe_load(fp)
-    temp_map = {}
     for table_config in config.get("tables", []):
         table_name = table_config.get("table_name")
         fields = {}
+        datasource = table_config.get("datasource")
         for (k, v) in table_config.get("fields").items():
             if v == "IntField":
                 fields[k] = IntField()
@@ -55,14 +63,14 @@ def init_yaml(path):
              fields
             动态创建类 该类继承 Table
         """
-        temp_map[table_name] = table
+        table_map[table_name] = table
     for db_setting_config in config.get("db_settings", []):
         name = db_setting_config.get("name")
         tables = []
         for table_name in db_setting_config.get("tables", []):
-            table = temp_map.get(table_name, None)
+            table = table_map.get(table_name, None)
             if table is not None:
-                temp_map[table_name] = "{}.{}".format(name, table_name)  # 其实这两个指向的都是同一个对象
+                table_map[table_name] = "{}.{}".format(name, table_name)  # 其实这两个指向的都是同一个对象
                 tables.append(table)
         db_settings.add(
             name=name,

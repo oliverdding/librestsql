@@ -3,6 +3,10 @@ tables:
     fields:
       username: StringField
       password: IntField
+  - table_name: wikipedia
+    fields:
+      username: StringField
+      password: IntField
   - table_name: table2
     fields:
       username: StringField
@@ -12,40 +16,44 @@ tables:
       username: StringField
       password: StringField
       datetime: TimeField
+  - table_name: cars
+    fields:
+      make: StringField
 db_settings:
-  - name: source1
-    tables:
-      - wikipedia
-      - table2
-    db_type: DRUID
-    host: localhost
-    port: '8888'
-    user: postgres
-    password: '12345'
-    db_name: xinan
-    black_tables: []
-    black_fields:
-      blacktable_1:
-        - test1
-        - test2
-  - name: source2
-    db_type: PG
-    host: localhost
-    port: '5432'
-    tables:
-      - model1_testuser
-    user: postgres
-    password: zhang23785491
-    db_name: testdjango
-    schema: public
+#  - name: pg_test
+#    tables:
+#      - sale
+#    db_type: PG
+#    host: localhost
+#    port: '5432'
+#    user: postgres
+#    password: '12345'
+#    db_name: test
+#    black_tables: []
+#    black_fields:
+#      sale: ['']
   - name: druid_test
     tables:
       - wikipedia
     db_type: DRUID
     host: localhost
     port: '8888'
+    user: postgres
+    password: '12345'
+    db_name: test
     black_tables: []
     black_fields:
-      a:
+      blacktable_1:
+        - test1
+        - test2
+  - name: es_test
+    tables:
+      - cars
+    db_type: ES
+    host: localhost
+    port: "9200"
+    black_tables: []
+    black_fields:
+      blacktable_1:
         - test1
         - test2

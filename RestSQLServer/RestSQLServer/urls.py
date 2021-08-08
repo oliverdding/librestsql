@@ -21,11 +21,13 @@ urlpatterns = [
     path('admin', admin.site.urls),
     path('', views.test),
     # 作为restsql Http接口
-    path('restsql', views.apiquery),
-    path('find_tables', views.table_query),
-    path('find_databases', views.database_query),
+    path('restsql', views.api_query),
+    path('restsql/find_tables', views.table_query),
+    path('restsql/find_databases', views.database_query),
     # 作为restsql Grafana接口
     path('query', views.grafana_query),
-    path('search', views.grafana_search)
+    path('search', views.grafana_search),
+    path('find_options', views.grafana_options),
+    path('find_tables', views.grafana_tables),
     # path('/annotations', views.),
 ]

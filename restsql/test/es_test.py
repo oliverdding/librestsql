@@ -1,22 +1,28 @@
 # encoding=utf-8
-from restsql.rest_client import RestClient
+import pandas as pd
+from restsql.rest_client import *
 from restsql.config.database import *
 
 if __name__ == '__main__':
     query_dict = {
-        "from": "es_test.car__",
+        "from": "es_test.cars",
         "time": {
             "column": 'sold',
-            "begin": "",
-            "end": "",
-            "interval": "1M"
+            "begin": "2001-08-08",
+            "end": "2019-08-08 01:01:01",
+            "interval": "1s"
         },
         "select": [
             {
                 "column": "price",
-                "alias": "price_sum",
-                "metric": "sum"
-            }
+                "alias": "价格",
+                "metric": ""
+            },
+            {
+                "column": "make",
+                "alias": "制造商",
+                "metric": ""
+            },
         ],
         "where": [
             {
@@ -25,7 +31,8 @@ if __name__ == '__main__':
                 "value": "red"
             }
         ],
-        "group": []
+        "group": [],
+        "limit": 2
     }
     db_settings.add(
         name='es_test',
@@ -33,5 +40,7 @@ if __name__ == '__main__':
         host='127.0.0.1',
         port=9200
     )
+    print(len(query_dict["time"]["begin"]))
     client = RestClient(query_dict)
-    print(client.query())
+    result = client.query()
+    print(result)

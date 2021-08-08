@@ -1,6 +1,9 @@
-from restsql.config.database import DataBase
-from restsql.query import *
+# encoding=utf-8
+
 import re
+import time
+from restsql.config.database import DataBase
+from restsql.query import Query
 
 __all__ = ['check']
 
@@ -25,7 +28,8 @@ def _check_metric(metric):
     :return:
     """
     legal_metric = ['', 'SUM', 'sum', 'AVG', 'avg', 'COUNT', 'count', 'MAX', 'max'
-                    'MIN', 'min', 'COUNT DISTINCT', 'count distinct']
+                                                                             'MIN', 'min', 'COUNT DISTINCT',
+                    'count distinct']
     if metric not in legal_metric:
         raise RuntimeError('"{metric}" metric is not supported'.format(metric=metric))
 
@@ -56,6 +60,40 @@ def _check_blacklist(que: Query, database: DataBase):
                 raise RuntimeError('Field "{}" access denied'.format(c['column']))
 
 
+def _check_date(strdate):
+    """
+    判断是否是一个有效的日期字符串,由于es查询原因必须补齐位数
+    """
+    if len(strdate) != 19 and len(strdate) != 10:
+        raise RuntimeError('The time is not valid')
+    try:
+        if ":" in strdate:
+            time.strptime(strdate, "%Y-%m-%d %H:%M:%S")
+        else:
+            time.strptime(strdate, "%Y-%m-%d")
+        return True
+    except:
+        raise RuntimeError('The time is not valid')
+
+
+def _check_time(que: Query):
+    """
+    检查时间字段,时间格式,interval是否符合规范
+    时间格式为yy-MM-dd或者yy-MM-dd hh:mm:ss
+    :param que:
+    :return:
+    """
+    rest_bucket = ['y', 'M', 'w', 'd', 'h', 'm', 's']
+    time_column = que.time_dict.get("column", "")
+    if time_column != "":
+        _check_column(time_column)
+        interval = que.time_dict.get("interval", " ")
+        if interval[-1] not in rest_bucket or not interval[:-1].isdigit():
+            raise RuntimeError('Interval "{}" is not supported'.format(interval))
+        _check_date(que.time_dict.get("begin", ""))
+        _check_date(que.time_dict.get("end", ""))
+
+
 def check(que: Query, database: DataBase):
     """
     检查表名以及所有字段名是否符合规范（只支持中文，大小写字母，数字，下划线）
@@ -64,6 +102,8 @@ def check(que: Query, database: DataBase):
     :param que: 包含查询信息的Query封装对象
     :return:
     """
+    # 检查time部分
+    _check_time(que)
     # 检查字段以及表名是否在黑名单内
     _check_blacklist(que, database)
     # 检查表名是否符合规范

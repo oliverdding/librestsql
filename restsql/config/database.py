@@ -73,11 +73,10 @@ class DataBase:
             if host is None or port is None:
                 raise RuntimeError("Empty elements in Druid")
             self.conn = connect(host=host, port=port)
-
-    # 暂时留给ES做兼容处理
-    def connect_db(self):
-        if self.db_type == EnumDataBase.ES:
-            return Elasticsearch(self.host + ":" + str(self.port))
+        elif db_type == EnumDataBase.ES:
+            if host is None or port is None:
+                raise RuntimeError("Empty elements in Elasticsearch")
+            self.conn = Elasticsearch(self.host + ":" + str(self.port))
 
     # 重新连接数据库
     def re_connect(self):

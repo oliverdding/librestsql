@@ -1,10 +1,9 @@
 # encoding=utf-8
 
 from restsql.check import check
-from restsql.datasource.sql_entry import *
-from restsql.config.database import *
-from restsql.datasource.client import *
-
+from restsql.query import Query
+from restsql.config.database import db_settings, EnumDataBase
+from restsql.datasource.client import EsClient, PgClient, DruidClient
 
 __all__ = ['RestClient']
 
@@ -28,7 +27,7 @@ class RestClient:
         # 获取DataBase对象
         database = db_settings.get_by_name(db_name)
         if database is None:
-            raise RuntimeRerror("no find the target table")
+            raise RuntimeError("no find the target table")
         check(self.query_instance, database)
         if database.db_type == EnumDataBase.ES:
             client = EsClient(database)

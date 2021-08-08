@@ -1,41 +1,44 @@
 # encoding=utf-8
 
-from restsql.config.database import *
-from restsql.datasource.client import *
-from restsql.query import Query
 import json
+from restsql.config.database import DataBase, EnumDataBase
+from restsql.datasource.client import PgClient
+from restsql.query import Query
+
 
 data_json = '''
 {
     "from":"test.sale",
     "time":{
-      "column":"create_time",
+      "column":"",
       "begin":"2021-7-20",
       "end":"2021-7-30",
       "interval":"1d"
     },
     "select":[
       {
+        "column":"name",
+        "alias":"",
+        "metric":""
+      },
+      {
         "column":"price",
-        "alias":"平均金额",
+        "alias":"平均价格",
         "metric":"avg"
-      },
-      {
-        "column":"price",
-        "alias":"总额",
-        "metric":"sum"
-      },
-      {
-        "column":"price",
-        "alias":"订单数",
-        "metric":"count"
       }
     ],
-    "where":[],
-    "group":[],
+    "where":[
+      {
+       "column":"price",
+       "op": "<=",
+       "value": "200"
+      }
+    ],
+    "group":["name"],
      "limit":1000
   }
 '''
+
 database = DataBase(name='test', db_type=EnumDataBase.PG, port='5432', db_name='test',
                     host='localhost', user='postgres', password='12345')
 query = Query(json.loads(data_json))
