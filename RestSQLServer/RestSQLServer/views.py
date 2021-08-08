@@ -24,9 +24,11 @@ def grafana_search(request):
 
 
 def grafana_query(request):
-    print("grafana请求测试")
-    print(json.loads(request.body))
-    test = [
+    # print("grafana请求测试")
+    # print(json.loads(request.body))
+    # TODO 下一步进行grafana对接
+    # 测试返回的假数据
+    test_response = [
         {
             "target": "upper_75",
             "datapoints": [
@@ -51,9 +53,9 @@ def grafana_query(request):
         }
     ]
     result = {'status': 'ok',
-              'data':test}
+              'data': test_response}
     print("grafana 测试返回结果")
-    print(json.dumps(result))
+    print(result)
     return HttpResponse(json.dumps(result))
 
 
@@ -88,21 +90,25 @@ def table_query(request):
     :param request: 获取需要查询表的database
     :return: 返回json格式的表结构列表
     """
-    if request.method == "GET":
-        database_name = request.GET.get("database")
-        database = db_settings.get_by_dbname(database_name)
-        table_dict = {}
-        for t in database.tables:
-            table_dict[getattr(t, 'table_name')] = list(
-                getattr(t, 'fields').keys())  # {'table_name':['column1','column2']
-        try:
-            resp = ResponseModel.success(table_dict)  # 内置转json
-        except JsonFormatException as e:
-            logging.exception(e)
-            return HttpResponseBadRequest(ResponseModel.failure(e.code, "parse table_dict to json error"))
-        return HttpResponse(resp)
-    else:
-        return HttpResponseBadRequest(ResponseModel.failure("400", "Incorrect request method"))
+    # if request.method == "GET":
+    #     database_name = request.GET.get("database")
+    #     database = db_settings.get_by_dbname(database_name)
+    #     table_dict = {}
+    #     for t in database.tables:
+    #         table_dict[getattr(t, 'table_name')] = list(
+    #             getattr(t, 'fields').keys())  # {'table_name':['column1','column2']
+    #     try:
+    #         resp = ResponseModel.success(table_dict)  # 内置转json
+    #     except JsonFormatException as e:
+    #         logging.exception(e)
+    #         return HttpResponseBadRequest(ResponseModel.failure(e.code, "parse table_dict to json error"))
+    #     return HttpResponse(resp)
+    # else:
+    #     return HttpResponseBadRequest(ResponseModel.failure("400", "Incorrect request method"))
+    return HttpResponse(json.dumps({
+        'status': 'ok',
+        'data': ["test1", "test2"]
+    }))
 
 
 def database_query(request):

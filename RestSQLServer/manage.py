@@ -21,5 +21,4 @@ def main():
 
 if __name__ == '__main__':
     init_yaml(CONF_RESTSQL_PATH)
-    print("loading database_config successfully! ")
     main()
