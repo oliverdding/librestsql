@@ -1,13 +1,11 @@
 import json
-import logging
 import sys
-
 import pandas as pd
 from django.http import HttpResponse, HttpResponseBadRequest
 from django.views.decorators.http import require_POST, require_GET
-
 from restsql import rest_client
 from restsql.config.database import db_settings
+from restsql.config.logger import rest_logger
 from .config.exception import *
 from .config.load import table_map
 from .utils import ResponseModel
@@ -31,22 +29,26 @@ def grafana_query(request):
     """
 
     if request.body is None or request.body == "":
-        return HttpResponseBadRequest(ResponseModel.failure('error', "Please input the request query"))
+        return HttpResponseBadRequest(ResponseModel.failure("error", "Please input the request query"))
     try:
-        rest_query = json.loads(request.body)
-    except JsonFormatException as e:
-        logging.exception(e)
-        return HttpResponseBadRequest(ResponseModel.failure(e.code, e.message))
+        rest_query_list = json.loads(request.body)
+        rest_query = rest_query_list[0] if len(rest_query_list) > 0 else {}  # 使用类三目表达式，先获取第一个query,如果由多个query，可以使用循环
+        rest_logger.logger.debug("query: {}".format(rest_query))
+    except Exception as e:
+        rest_logger.logger.exception(e)
+        return HttpResponseBadRequest(ResponseModel.failure("error", e.args[0]))
     # 通过协议的表名在请求协议中添加数据源
+    if rest_query.get("from", "") == "":
+        return HttpResponseBadRequest(ResponseModel.failure("error", "Table not found"))
     table_name = rest_query["from"].split(".")[1]
     rest_query["from"] = table_map.get(table_name, "")
-    if rest_query["from"] == "":
-        raise Exception("Table not found")
+
     try:
         client = rest_client.RestClient(rest_query)
         result = client.query()
-    except RestSqlExceptionBase as e:
-        return HttpResponse(ResponseModel.failure(e.code, "The query failed，the error message: {}".format(e.message)))
+    except Exception as e:
+        rest_logger.logger.exception(e)
+        return HttpResponse(ResponseModel.failure("error", "The query failed，the error message: {}".format(e.args[0])))
     # pandas dataFrame转化为grafana的dataframe格式
     resp = {"fields": []}
     for column in result.columns:
@@ -59,9 +61,9 @@ def grafana_query(request):
     try:
         result = json.dumps({'status': 'ok',
                              'data': [resp]})
-    except JsonFormatException as e:
-        logging.exception(e)
-        return HttpResponseBadRequest(ResponseModel.failure(e.code, e.message))
+    except Exception as e:
+        rest_logger.logger.exception(e)
+        return HttpResponseBadRequest(ResponseModel.failure("error", e.args[0]))
     return HttpResponse(result)
 
 
@@ -79,8 +81,8 @@ def grafana_tables(request):
             'status': 'ok',
             'data': list(table_map.keys())
         })
-    except JsonFormatException as e:
-        logging.exception(e)
+    except Exception as e:
+        rest_logger.logger.exception(e)
         return HttpResponseBadRequest(ResponseModel.failure(e.code, e.message))
     return HttpResponse(resp)
 
@@ -99,8 +101,8 @@ def grafana_options(request):
         return HttpResponseBadRequest(ResponseModel.failure('error', "Please input the request query"))
     try:
         request_dict = json.loads(request.body)
-    except JsonFormatException as e:
-        logging.exception(e)
+    except Exception as e:
+        rest_logger.logger.exception(e)
         return HttpResponseBadRequest(ResponseModel.failure(e.code, e.message))
     table_name = request_dict.get("tableName", "")
     db_table_name = table_map.get(table_name, None)
@@ -125,8 +127,8 @@ def grafana_options(request):
             'status': 'ok',
             'data': list(target_table.fields.keys())
         })
-    except JsonFormatException as e:
-        logging.exception(e)
+    except Exception as e:
+        rest_logger.logger.exception(e)
         return HttpResponseBadRequest(ResponseModel.failure(e.code, e.message))
     return HttpResponse(resp)
 
@@ -142,8 +144,9 @@ def api_query(request):
 
     try:
         rest_query = json.loads(request.body)
-    except JsonFormatException as e:
-        logging.exception(e)
+        rest_logger.logger.debug("restapi query： {}".format(rest_query))
+    except Exception as e:
+        rest_logger.logger.exception(e)
         return HttpResponseBadRequest(ResponseModel.failure(e.code, e.message))
     return_format = request.GET.get('format', None)
     if not rest_query.get('from', None):
@@ -171,8 +174,8 @@ def table_query(request):
                 getattr(t, 'fields').keys())  # {'table_name':['column1','column2']
         try:
             resp = ResponseModel.success(table_dict)  # 内置转json
-        except JsonFormatException as e:
-            logging.exception(e)
+        except Exception as e:
+            rest_logger.logger.exception(e)
             return HttpResponseBadRequest(ResponseModel.failure(e.code, "parse table_dict to json error"))
         return HttpResponse(resp)
     else:
@@ -189,8 +192,8 @@ def database_query(request):
             databases.append(k)
         try:
             resp = json.dumps(ResponseModel.success(databases))
-        except JsonFormatException as e:
-            logging.exception(e)
+        except Exception as e:
+            rest_logger.logger.exception(e)
             return HttpResponseBadRequest(ResponseModel.failure(e.code, "parse table_dict to json error"))
         return HttpResponse(resp)
     else:

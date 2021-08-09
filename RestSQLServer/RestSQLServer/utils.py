@@ -25,7 +25,7 @@ class ResponseModel:
 
     def __init__(self, status):
         self._result = {
-            'code': status,
+            'status': status,
             'time': datetime.datetime.now().strftime("  %Y-%m-%d %I:%M:%S %p ")
         }
 

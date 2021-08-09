@@ -1,4 +1,4 @@
-__all__ = ['RestSqlExceptionBase', 'RunningException', 'UserConfigException', 'JsonFormatException',
+__all__ = ['RestSqlExceptionBase', 'RunningException', 'UserConfigException',
            'ProgramConfigException']
 
 
@@ -8,8 +8,7 @@ class RestSqlExceptionBase(Exception):
     code 0
     """
 
-    def __init__(self, code, message, *args):
-        self.code = code
+    def __init__(self, message, *args):
         self.message = message.format(args)
 
 
@@ -18,21 +17,15 @@ class RunningException(RestSqlExceptionBase):
     运行时异常；查看日志并处理。
     code [1, 100]
     """
-    pass
+
+    def __init__(self, code, message, *args):
+        self.message = message.format(args)
 
 
 class UserConfigException(RestSqlExceptionBase):
     """
     用户相关异常；提示用户。
     code [101, 200]
-    """
-    pass
-
-
-class JsonFormatException(UserConfigException):
-    """
-    json格式异常；提示用户问题。
-    code [201, 300]
     """
     pass
 

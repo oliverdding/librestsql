@@ -4,14 +4,14 @@ import logging
 import os
 import yaml
 
+from restsql.config.logger import Logger, rest_logger
 from restsql.config.database import EnumDataBase, db_settings
 from restsql.config.table import NumberField, StringField, BoolField, IntField, TimeField, Table
 
-__all__ = ['init_yaml', 'CONF_RESTSQL_PATH']
-
-logger = logging.getLogger("restsql_load")
+__all__ = ['init_yaml', "CONF_RESTSQL_PATH", "init_logger", "CONF_LOGGER_PATH","table_map"]
 curPath = os.path.dirname(os.path.realpath(__file__))
-CONF_RESTSQL_PATH = os.getenv('CONF_RESTSQL_PATH', curPath + '/restsql.yaml')  # 导入配置文件路径
+CONF_RESTSQL_PATH = os.getenv("CONF_RESTSQL_PATH", curPath + os.sep + "restsql.yaml")  # 导入配置文件路径
+CONF_LOGGER_PATH = os.getenv("CONF_LOGGER_PATH", curPath + os.sep + "restsql.log")  # 设置文件日志路径，由manage.py导入
 
 """
 提供根据表名定位到数据源的映射
@@ -41,7 +41,6 @@ def init_yaml(path):
     for table_config in config.get("tables", []):
         table_name = table_config.get("table_name")
         fields = {}
-        datasource = table_config.get("datasource")
         for (k, v) in table_config.get("fields").items():
             if v == "IntField":
                 fields[k] = IntField()
@@ -86,3 +85,10 @@ def init_yaml(path):
             black_fields=db_setting_config.get("black_fields", None),
         )
 
+
+def init_logger(path):
+    """
+    该方法被manage.py调用，生成单例对象
+    后面可以根据环境变量读入日志等具体配置
+    """
+    rest_logger.set_file_logger(path)

@@ -1,5 +1,6 @@
 from elasticsearch import Elasticsearch
 from pydruid.db import connect
+from restsql.config.logger import rest_logger
 import os
 import sys
 import psycopg2
@@ -80,7 +81,7 @@ class DataBase:
 
     # 重新连接数据库
     def re_connect(self):
-        print('数据库进行了重启')
+        rest_logger.logger.warning("数据库进行了重启")
         self.conn.close()
         if self.db_type == EnumDataBase.PG:
             self.conn = psycopg2.connect(database=self.db_name, user=self.user, password=self.password,

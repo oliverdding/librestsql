@@ -1,6 +1,7 @@
 import pandas as pd
 import json
 import time
+from restsql.config.logger import rest_logger
 
 _all_ = ['EsQuery']
 
@@ -194,5 +195,5 @@ class EsQuery:
         self._parse_composite()
         self._parse_fields()
         self._parse_metric()
-        print(self.dsl)
+        rest_logger.logger.info(self.dsl)
         return self.dsl

@@ -1,6 +1,7 @@
 # encoding=utf-8
 
 from restsql.config.database import EnumDataBase
+from restsql.config.logger import rest_logger
 from restsql.query import Query
 
 
@@ -202,7 +203,7 @@ def to_sql(que: Query, sql_type, schema=None):
     limit = 'LIMIT ' + str(que.limit)  # 数据量
     sort = 'ORDER BY 1 '
     sql = select + source + filters + group + sort + limit  # 最终的sql拼接
-    print(sql, param_dic)
+    rest_logger.logger.info("sql: {}  paramdict: {}".format(sql, param_dic))
     return sql, param_dic
 
 
