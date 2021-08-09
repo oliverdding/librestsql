@@ -201,7 +201,8 @@ def to_sql(que: Query, sql_type, schema=None):
     filters = _build_filter(que.where_list, que.time_dict, param_dic)  # 过滤条件
     group = _build_group(que.group_list, que.time_dict, sql_type)  # 分组
     limit = 'LIMIT ' + str(que.limit)  # 数据量
-    sort = 'ORDER BY 1 '
+    # 若存在时间字段则按第一个字段排序（即时序）， 否则默认排序
+    sort = 'ORDER BY 1 ' if que.time_dict and 'column' in que.time_dict and len(que.time_dict['column']) > 0 else ''
     sql = select + source + filters + group + sort + limit  # 最终的sql拼接
     rest_logger.logger.info("sql: {}  paramdict: {}".format(sql, param_dic))
     return sql, param_dic

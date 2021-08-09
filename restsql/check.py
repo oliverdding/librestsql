@@ -40,7 +40,7 @@ def _check_column(column):
     :param column: 字段名
     :return:
     """
-    if re.match(pattern=r'[\u4E00-\u9FA5A-Za-z0-9_*]+$', string=column) is None:
+    if re.match(pattern=r'[\u4E00-\u9FA5A-Za-z0-9_.]+$', string=column) is None:
         raise RuntimeError('Field "{}" error'.format(column))
 
 

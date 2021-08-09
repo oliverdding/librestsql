@@ -169,7 +169,7 @@ class EsQuery:
         :return: DSL加入分组以及时间聚合部分，若用户未指定Interval则默认为1s
         """
         for g in self.group_list:
-            sources_dict = {g: {"terms": {"field": g + ".keyword"}}}
+            sources_dict = {g: {"terms": {"field": g}}}
             self.dsl_composite.append(sources_dict)
         # 如果用户未填interval值，interval默认值为1s
         if len(self.time) != 0 and self.time.get("column", "") != "":
@@ -178,6 +178,7 @@ class EsQuery:
             sources_dict = {self.time["column"]: {"date_histogram": {"field": self.time["column"]}}}
             sources_dict[self.time["column"]]["date_histogram"]["interval"] = self.time["interval"]
             sources_dict[self.time["column"]]["date_histogram"]["format"] = "yyyy-MM-dd HH:mm:ss"
+            sources_dict[self.time["column"]]["date_histogram"]["order"] = "asc"
             self.dsl_composite.append(sources_dict)
         if len(self.dsl_composite) == 0:
             del self.dsl["aggs"]

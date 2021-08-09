@@ -16,23 +16,19 @@ if __name__ == '__main__':
             {
                 "column": "price",
                 "alias": "价格",
-                "metric": ""
+                "metric": "count"
             },
             {
-                "column": "make",
-                "alias": "制造商",
+                "column": "sold",
+                "alias": "销售时间",
                 "metric": ""
             },
         ],
         "where": [
-            {
-                "column": "color",
-                "op": "=",
-                "value": "red"
-            }
+
         ],
         "group": [],
-        "limit": 2
+        "limit": 1000
     }
     db_settings.add(
         name='es_test',
@@ -40,7 +36,6 @@ if __name__ == '__main__':
         host='127.0.0.1',
         port=9200
     )
-    print(len(query_dict["time"]["begin"]))
     client = RestClient(query_dict)
     result = client.query()
-    print(result)
+    print(result["time"].values.tolist())

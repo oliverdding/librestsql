@@ -19,30 +19,89 @@ def test(request):
 
 
 def grafana_search(request):
-    return HttpResponse('ok')
+    """
+       查询variable接口
+       request:
+       {
+           'target': '...' # example: {"select": "color", "from": "cars"}
+       }
+       response:
+           ['...', ...]
+       """
+    rest_logger.logger.info("/search request")
+    data = json.loads(request.body)
+    target = data.get('target')
+    if target is None:
+        rest_logger.logger.error("target is invalid")
+        raise UserConfigException('target is invalid')
+    try:
+        target = json.loads(target)
+    except Exception as e:
+        rest_logger.logger.exception(e)
+        return HttpResponseBadRequest(ResponseModel.failure("error", e.args[0]))
+    try:
+        restsql_query = gen_restsql_query(target)
+        rest_logger.logger.debug("VariableView: %s", restsql_query)
+        client = rest_client.RestClient(restsql_query)
+        results = client.query()
+        rest_logger.logger.debug("VariableView: %s", results)
+    except Exception as e:
+        rest_logger.logger.exception(e)
+        return HttpResponse(ResponseModel.failure("error", "The query failed，the error message: {}".format(e.args[0])))
+    results = results[target["select"]].values.tolist()
+    print(results)
+    try:
+        resp = json.dumps({'status': 'ok',
+                           'data': results})
+    except Exception as e:
+        rest_logger.logger.exception(e)
+        return HttpResponseBadRequest(ResponseModel.failure("error", e.args[0]))
+    return HttpResponse(resp)
+
+
+def gen_restsql_query(target):
+    """
+    根据variable查询的输入语句，生成restql查询
+    :param target: 查询variable接口请求target中的内容
+    :return:restsql请求协议
+    """
+    return {
+        "from": table_map[target["from"]],
+        "select": [
+            {
+                "column": target["select"],
+                "alias": "",
+                "metric": ""
+            }
+        ],
+        "where": [],
+        "group": [],
+        "limit": 1000
+    }
 
 
 def grafana_query(request):
     """
+    前端采用异步方式请求,只需要返回单次查询结果而无需以数组方式返回多次查询的结果
     :param request: 请求对象
     :return: grafana指定的DataFrame格式
     """
 
     if request.body is None or request.body == "":
+        rest_logger.logger.warning("request body is Empty")
         return HttpResponseBadRequest(ResponseModel.failure("error", "Please input the request query"))
     try:
-        rest_query_list = json.loads(request.body)
-        rest_query = rest_query_list[0] if len(rest_query_list) > 0 else {}  # 使用类三目表达式，先获取第一个query,如果由多个query，可以使用循环
+        rest_query = json.loads(request.body)
         rest_logger.logger.debug("query: {}".format(rest_query))
     except Exception as e:
         rest_logger.logger.exception(e)
         return HttpResponseBadRequest(ResponseModel.failure("error", e.args[0]))
     # 通过协议的表名在请求协议中添加数据源
-    if rest_query.get("from", "") == "":
-        return HttpResponseBadRequest(ResponseModel.failure("error", "Table not found"))
     table_name = rest_query["from"].split(".")[1]
     rest_query["from"] = table_map.get(table_name, "")
-
+    if rest_query["from"] == "":
+        rest_logger.logger.error("Table {} is not found".format(table_name))
+        return HttpResponseBadRequest(ResponseModel.failure("error", "Table not found"))
     try:
         client = rest_client.RestClient(rest_query)
         result = client.query()
@@ -98,6 +157,7 @@ def grafana_options(request):
           ['...', ...]
     """
     if request.body is None or request.body == "":
+        rest_logger.logger.warning("request body is empty")
         return HttpResponseBadRequest(ResponseModel.failure('error', "Please input the request query"))
     try:
         request_dict = json.loads(request.body)
@@ -107,10 +167,12 @@ def grafana_options(request):
     table_name = request_dict.get("tableName", "")
     db_table_name = table_map.get(table_name, None)
     if db_table_name is None:
+        rest_logger.logger.warning('Could not find table entry: %s', table_name)
         raise Exception('Could not find table entry: {}'.format(table_name))
     try:
         db_name, table_name = db_table_name.split('.', 1)
     except BaseException:
+        rest_logger.logger.warning('table name %s is invalid', db_table_name)
         raise Exception('table name {} is invalid'.format(db_table_name))
     target_table = None
     for db_setting_name in db_settings.get_all_name():
@@ -121,6 +183,7 @@ def grafana_options(request):
                     break
             break  # target db has no target table
     if target_table is None:
+        rest_logger.logger.warning('Could not find table: %s', db_table_name)
         raise Exception('Could not find table: {}'.format(db_table_name))
     try:
         resp = json.dumps({
