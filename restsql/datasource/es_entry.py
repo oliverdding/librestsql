@@ -132,13 +132,13 @@ class EsQuery:
             else:
                 raise SyntaxError('cat not support op: {0}, field: {1}'.format(filter_dic["op"], filter_dic["column"]))
             # 将请求协议的yy:MM:dd hh:mm:ss格式转化为unix时间戳
-        if self.time.get("begin", "") != "":
+        if self.time.get("column", "") != "" and self.time.get("begin", "") != "":
             self.dsl_where.append({
                 'range': {
                     self.time["column"]: {'gte': self.time["begin"].replace(" ", "T", 1)}
                 }
             })
-        if self.time.get("end", "") != "":
+        if self.time.get("column", "") != "" and self.time.get("end", "") != "":
             self.dsl_where.append({
                 'range': {
                     self.time["column"]: {'lte': self.time["end"].replace(" ", "T", 1)}
