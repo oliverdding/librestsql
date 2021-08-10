@@ -154,12 +154,10 @@ class EsQuery:
         func_map = {'count': 'value_count', 'sum': 'sum', 'avg': 'avg', 'max': 'max', 'min': 'min',
                     'count distinct': 'cardinality'}
         for s in self.select_list:
-            if s["metric"] in func_map.keys() and s["metric"] != "count":
+            if s["metric"] in func_map.keys():
                 self.dsl_aggs[s["alias"]] = {func_map[s["metric"]]: {'field': s["column"]}}
-            elif s["metric"] == "count":
-                self.dsl_aggs[s["alias"]] = {func_map[s["metric"]]: {'field': s["column"] + ".keyword"}}
             else:
-                if s["metric"] == "" or s["metric"] is None:
+                if s.get("metric", "") == "":
                     continue
                 raise SyntaxError('cat not support aggregation operation: {}'.format(s["metric"]))
         pass
@@ -169,7 +167,8 @@ class EsQuery:
         :return: DSL加入分组以及时间聚合部分，若用户未指定Interval则默认为1s
         """
         for g in self.group_list:
-            sources_dict = {g: {"terms": {"field": g}}}
+            k = g.split(".")[0]
+            sources_dict = {k: {"terms": {"field": g}}}
             self.dsl_composite.append(sources_dict)
         # 如果用户未填interval值，interval默认值为1s
         if len(self.time) != 0 and self.time.get("column", "") != "":
@@ -197,4 +196,5 @@ class EsQuery:
         self._parse_fields()
         self._parse_metric()
         rest_logger.logger.info(self.dsl)
+        # print(json.dumps(self.dsl))
         return self.dsl

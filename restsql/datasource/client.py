@@ -78,12 +78,14 @@ class EsClient(Client):
     def query(self, que):
         # 保存别名的字典
         alias_dict = {}
-        # 保存不进行聚合的字段
+        # 保存不进行聚合的字段和别名
         no_agg_field = []
         for s in que.select_list:
             alias_dict[s["column"]] = s["alias"]
             if s.get("metric", "") == "":
-                no_agg_field.append(s["column"])
+                if s.get("alias", "") == "":
+                    s["alias"] = s["column"]
+                no_agg_field.append([s["column"], s["alias"]])
         if que.time_dict.get("column", "") != "":
             alias_dict[que.time_dict["column"]] = "time"
 
@@ -100,7 +102,7 @@ class EsClient(Client):
                 results = raw_result['agg']['groupby']['buckets']
             for it in results:
                 for f in no_agg_field:
-                    it[alias_dict[f]] = it["key"].get(f)
+                    it[f[1]] = it["key"].get(f[0])
                 it["time"] = it["key"].get(que.time_dict.get("column", None), None)
                 if it["time"] is None:
                     del it["time"]
