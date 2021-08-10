@@ -132,13 +132,13 @@ class EsQuery:
             else:
                 raise SyntaxError('cat not support op: {0}, field: {1}'.format(filter_dic["op"], filter_dic["column"]))
             # 将请求协议的yy:MM:dd hh:mm:ss格式转化为unix时间戳
-        if self.time.get("begin", "") != "":
+        if self.time.get("column", "") != "" and self.time.get("begin", "") != "":
             self.dsl_where.append({
                 'range': {
                     self.time["column"]: {'gte': self.time["begin"].replace(" ", "T", 1)}
                 }
             })
-        if self.time.get("end", "") != "":
+        if self.time.get("column", "") != "" and self.time.get("end", "") != "":
             self.dsl_where.append({
                 'range': {
                     self.time["column"]: {'lte': self.time["end"].replace(" ", "T", 1)}
@@ -169,7 +169,7 @@ class EsQuery:
         :return: DSL加入分组以及时间聚合部分，若用户未指定Interval则默认为1s
         """
         for g in self.group_list:
-            sources_dict = {g: {"terms": {"field": g + ".keyword"}}}
+            sources_dict = {g: {"terms": {"field": g}}}
             self.dsl_composite.append(sources_dict)
         # 如果用户未填interval值，interval默认值为1s
         if len(self.time) != 0 and self.time.get("column", "") != "":
@@ -178,6 +178,7 @@ class EsQuery:
             sources_dict = {self.time["column"]: {"date_histogram": {"field": self.time["column"]}}}
             sources_dict[self.time["column"]]["date_histogram"]["interval"] = self.time["interval"]
             sources_dict[self.time["column"]]["date_histogram"]["format"] = "yyyy-MM-dd HH:mm:ss"
+            sources_dict[self.time["column"]]["date_histogram"]["order"] = "asc"
             self.dsl_composite.append(sources_dict)
         if len(self.dsl_composite) == 0:
             del self.dsl["aggs"]
