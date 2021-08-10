@@ -120,7 +120,8 @@ def grafana_query(request):
         resp["fields"].append(fieldDTO)
     try:
         result = json.dumps({'status': 'ok',
-                             'data': resp})
+                             'data': resp}
+                            )
     except Exception as e:
         rest_logger.logger.exception(e)
         return HttpResponseBadRequest(ResponseModel.failure("error", e.args[0]))
