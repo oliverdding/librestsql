@@ -11,8 +11,8 @@ class Logger:
     日志输出相关参数
     leve
     levelname: 日志级别名
-    asctime: 易读文件格式
-    name: 当前调用logger记录器名称
+    asctime: 易读时间格式
+    name: 当前调用logger记录器名称（当前运行该logger语句是在哪一个文件)
     lineno: 调用输出日志的源码所在行数
     filename: 输出日志的文件名
     threadName: 线程名

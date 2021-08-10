@@ -83,7 +83,7 @@ def grafana_tables(request):
         })
     except Exception as e:
         rest_logger.logger.exception(e)
-        return HttpResponseBadRequest(ResponseModel.failure(e.code, e.message))
+        return HttpResponseBadRequest(ResponseModel.failure("error", e.message))
     return HttpResponse(resp)
 
 
@@ -103,11 +103,11 @@ def grafana_options(request):
         request_dict = json.loads(request.body)
     except Exception as e:
         rest_logger.logger.exception(e)
-        return HttpResponseBadRequest(ResponseModel.failure(e.code, e.message))
+        return HttpResponseBadRequest(ResponseModel.failure("error", e.message))
     table_name = request_dict.get("tableName", "")
     db_table_name = table_map.get(table_name, None)
     if db_table_name is None:
-        raise Exception('Could not find table entry: {}'.format(table_name))
+        return HttpResponseBadRequest(ResponseModel.failure('error','Could not find table entry: {}'.format(table_name)))
     try:
         db_name, table_name = db_table_name.split('.', 1)
     except BaseException:
@@ -129,7 +129,7 @@ def grafana_options(request):
         })
     except Exception as e:
         rest_logger.logger.exception(e)
-        return HttpResponseBadRequest(ResponseModel.failure(e.code, e.message))
+        return HttpResponseBadRequest(ResponseModel.failure("error", e.message))
     return HttpResponse(resp)
 
 

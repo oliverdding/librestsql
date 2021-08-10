@@ -5,8 +5,8 @@ tables:
       password: IntField
   - table_name: wikipedia
     fields:
-      username: StringField
-      password: IntField
+      comment: StringField
+      countryName: IntField
   - table_name: table2
     fields:
       username: StringField
@@ -32,7 +32,7 @@ db_settings:
 #    black_tables: []
 #    black_fields:
 #      sale: ['']
-  - name: druid_test
+  - name: RestSQL
     tables:
       - wikipedia
     db_type: DRUID
