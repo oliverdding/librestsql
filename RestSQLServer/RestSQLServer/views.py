@@ -87,13 +87,14 @@ def grafana_query(request):
     except Exception as e:
         rest_logger.logger.exception(e)
         return HttpResponse(ResponseModel.failure("error", "The query failed，the error message: {}".format(e.args[0])))
-    refid = rest_query.get("refId", "A")
+    refId = rest_query.get("refId", "A")
     # pandas dataFrame转化为grafana的dataframe格式
-    resp = {"refId": refid, "fields": []}
+    resp = {"refId": refId, "fields": []}
+    timeShift = rest_query["time"].get("timeShift", 0)
     for column in result.columns:
         if column == "time":
             result["time"] = pd.to_datetime(result["time"])
-            fieldDTO = {"name": column, "values": [int(t) // 10 ** 6 for t in result[column].values], "type": "time"}
+            fieldDTO = {"name": column, "values": [int(t) // 10 ** 6 - timeShift for t in result[column].values], "type": "time"}
         else:
             fieldDTO = {"name": column, "values": result[column].values.tolist()}
         resp["fields"].append(fieldDTO)

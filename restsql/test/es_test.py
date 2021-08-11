@@ -10,24 +10,33 @@ if __name__ == '__main__':
             "column": 'sold',
             "begin": "2001-08-08",
             "end": "2019-08-08 01:01:01",
-            "interval": "1s"
+            "interval": "1y"
         },
         "select": [
             {
                 "column": "price",
                 "alias": "价格",
+                "metric": ""
+            },
+            {
+                "column": "make.keyword",
+                "alias": "制造商",
                 "metric": "count"
             },
             {
-                "column": "sold",
-                "alias": "销售时间",
-                "metric": ""
+                "column": "price",
+                "alias": "总计",
+                "metric": "sum"
             },
-        ],
-        "where": [
+            {
+                "column": "price",
+                "alias": "计数",
+                "metric": "count"
+            }
 
         ],
-        "group": [],
+        "where": [],
+        "group": ["price"],
         "limit": 1000
     }
     db_settings.add(
@@ -38,4 +47,4 @@ if __name__ == '__main__':
     )
     client = RestClient(query_dict)
     result = client.query()
-    print(result["time"].values.tolist())
+    print(result)
