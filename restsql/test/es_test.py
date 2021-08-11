@@ -5,40 +5,33 @@ from restsql.config.database import *
 
 if __name__ == '__main__':
     query_dict = {
-        "from": "es_test.cars",
+        "from": "es_test.test_index",
         "time": {
-            "column": 'sold',
-            "begin": "2001-08-08",
-            "end": "2019-08-08 01:01:01",
+            "column": "time",
+            "begin": "",
+            "end": "",
             "interval": "1y"
         },
         "select": [
             {
                 "column": "price",
-                "alias": "价格",
-                "metric": ""
-            },
-            {
-                "column": "make.keyword",
-                "alias": "制造商",
-                "metric": "count"
-            },
-            {
-                "column": "price",
-                "alias": "总计",
+                "alias": "",
                 "metric": "sum"
             },
             {
                 "column": "price",
-                "alias": "计数",
+                "alias": "",
+                "metric": "max"
+            },
+            {
+                "column": "address.keyword",
+                "alias": "",
                 "metric": "count"
             }
-
         ],
-        "where": [],
-        "group": ["price"],
-        "limit": 1000
+        "group": ["cityName.keyword"]
     }
+
     db_settings.add(
         name='es_test',
         db_type=EnumDataBase.ES,

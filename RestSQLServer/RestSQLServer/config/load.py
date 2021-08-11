@@ -4,7 +4,7 @@ import logging
 import os
 import yaml
 
-from restsql.config.logger import Logger, rest_logger
+from restsql.config.logger import rest_logger
 from restsql.config.database import EnumDataBase, db_settings
 from restsql.config.table import NumberField, StringField, BoolField, IntField, TimeField, Table
 
@@ -31,7 +31,7 @@ def get_db_type(db_type):
     elif db_type == "ES":
         return EnumDataBase.ES
     else:
-        logger.critical("载入数据源配置出错: 无法识别数据库类型: %s", db_type)
+        rest_logger.logger.critical("载入数据源配置出错: 无法识别数据库类型: %s", db_type)
         raise Exception("载入数据源配置出错: 无法识别数据库类型: {}".format(db_type))
 
 
@@ -53,7 +53,7 @@ def init_yaml(path):
             elif v == "TimeField":
                 fields[k] = TimeField()
             else:
-                logger.critical("载入数据源配置出错: 无法识别的字段类型: %s", v)
+                rest_logger.logger.critical("载入数据源配置出错: 无法识别的字段类型: %s", v)
                 raise Exception("载入数据源配置出错: 无法识别的字段类型: {}".format(v))
         table = type(str(table_name), (Table,), {'table_name': table_name, 'fields': fields})  # 动态类型
         """

@@ -1,24 +1,17 @@
 tables:
-  - table_name: table1
-    fields:
-      username: StringField
-      password: IntField
   - table_name: wikipedia
     fields:
+      __time: TimeField
+      cityName: StringField
       comment: StringField
-      countryName: IntField
-  - table_name: table2
-    fields:
-      username: StringField
-      password: IntField
-  - table_name: model1_testuser
-    fields:
-      username: StringField
-      password: StringField
-      datetime: TimeField
+      commentLength: NumberField
+      channel: StringField
   - table_name: cars
     fields:
       make: StringField
+      color: StringField
+      price: NumberField
+      sold: TimeField
 db_settings:
 #  - name: pg_test
 #    tables:
@@ -32,15 +25,12 @@ db_settings:
 #    black_tables: []
 #    black_fields:
 #      sale: ['']
-  - name: RestSQL
+  - name: druid_test
     tables:
       - wikipedia
     db_type: DRUID
     host: localhost
     port: '8888'
-    user: postgres
-    password: '12345'
-    db_name: test
     black_tables: []
     black_fields:
       blacktable_1:
