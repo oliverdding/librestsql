@@ -9,7 +9,7 @@ from restsql.config.logger import rest_logger
 from .config.exception import *
 from .config.load import table_map
 from .utils import ResponseModel
-from .utils import frame_parse_obj
+from .utils import frame_parse_obj, gen_restsql_query
 
 sys.path.extend([r'E:\f1ed-restsql-librestsql-master'])
 
@@ -57,27 +57,6 @@ def grafana_search(request):
         rest_logger.logger.exception(e)
         return HttpResponseBadRequest(ResponseModel.failure("error", e.args[0]))
     return HttpResponse(resp)
-
-
-def gen_restsql_query(target):
-    """
-    根据variable查询的输入语句，生成restql查询
-    :param target: 查询variable接口请求target中的内容
-    :return:restsql请求协议
-    """
-    return {
-        "from": table_map[target["from"]],
-        "select": [
-            {
-                "column": target["select"],
-                "alias": "",
-                "metric": ""
-            }
-        ],
-        "where": [],
-        "group": [],
-        "limit": 1000
-    }
 
 
 def grafana_query(request):
@@ -136,6 +115,11 @@ def grafana_tables(request):
           'status': 'ok',
           'data': ['...', ...]
       }
+      Args:
+          request: 传输的http对象
+      Returns:
+          status: ok/error
+          data: 返回表名列表
       """
     try:
         resp = json.dumps({
@@ -144,7 +128,7 @@ def grafana_tables(request):
         })
     except Exception as e:
         rest_logger.logger.exception(e)
-        return HttpResponseBadRequest(ResponseModel.failure(e.code, e.message))
+        return HttpResponseBadRequest(ResponseModel.failure("error", e.message))
     return HttpResponse(resp)
 
 
@@ -165,12 +149,13 @@ def grafana_options(request):
         request_dict = json.loads(request.body)
     except Exception as e:
         rest_logger.logger.exception(e)
-        return HttpResponseBadRequest(ResponseModel.failure(e.code, e.message))
+        return HttpResponseBadRequest(ResponseModel.failure("error", e.args[0]))
     table_name = request_dict.get("tableName", "")
     db_table_name = table_map.get(table_name, None)
     if db_table_name is None:
         rest_logger.logger.warning('Could not find table entry: %s', table_name)
-        return HttpResponseBadRequest(ResponseModel.failure("error",'Could not find table entry: {}'.format(table_name)))
+        return HttpResponseBadRequest(
+            ResponseModel.failure("error", 'Could not find table entry: {}'.format(table_name)))
     try:
         db_name, table_name = db_table_name.split('.', 1)
     except BaseException:
@@ -186,7 +171,7 @@ def grafana_options(request):
             break  # target db has no target table
     if target_table is None:
         rest_logger.logger.warning('Could not find table: %s', db_table_name)
-        return HttpResponseBadRequest(ResponseModel.failure("error",'Could not find table: {}'.format(db_table_name)))
+        return HttpResponseBadRequest(ResponseModel.failure("error", 'Could not find table: {}'.format(db_table_name)))
     try:
         resp = json.dumps({
             'status': 'ok',
@@ -194,7 +179,7 @@ def grafana_options(request):
         })
     except Exception as e:
         rest_logger.logger.exception(e)
-        return HttpResponseBadRequest(ResponseModel.failure(e.code, e.message))
+        return HttpResponseBadRequest(ResponseModel.failure("error", e.args[0]))
     return HttpResponse(resp)
 
 
@@ -212,7 +197,7 @@ def api_query(request):
         rest_logger.logger.debug("restapi query： {}".format(rest_query))
     except Exception as e:
         rest_logger.logger.exception(e)
-        return HttpResponseBadRequest(ResponseModel.failure(e.code, e.message))
+        return HttpResponseBadRequest(ResponseModel.failure("error", e.args[0]))
     return_format = request.GET.get('format', None)
     if not rest_query.get('from', None):
         return HttpResponse(ResponseModel.failure('400', "You need to specify the target data source"))
@@ -220,7 +205,7 @@ def api_query(request):
         client = rest_client.RestClient(rest_query)
         result = client.query()
     except RestSqlExceptionBase as e:
-        return HttpResponse(ResponseModel.failure(e.code, "The query failed，the error message: {}".format(e.message)))
+        return HttpResponse(ResponseModel.failure("error", "The query failed，the error message: {}".format(e.message)))
     resp = frame_parse_obj(result, return_format)  # 如果是不指明以txt,或者html格式的，在内部进行转json返回
     return HttpResponse(resp)
 
@@ -248,8 +233,20 @@ def table_query(request):
 
 
 def database_query(request):
-    """
-    :return:返回json格式的数据源名列表
+    # """
+    # :return:返回json格式的数据源名列表
+    # """
+    """函数功能.
+
+            函数功能说明.
+
+            Args:
+                arg1 (int): arg1的参数说明
+                arg2 (str): arg2的参数说明
+
+            Returns:
+                bool: 返回值说明
+
     """
     if request.method == "GET":
         databases = []

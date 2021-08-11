@@ -196,7 +196,7 @@ def to_sql(que: Query, sql_type, schema=None):
     if schema is None:
         source = 'FROM "{}" '.format(que.target.split('.')[1])  # 数据源
     else:
-        source = 'FROM "{}"."{}" '.format(schema, que.target.split('.')[1])  # 数据源
+        source = 'FROM "{}"."{}" '.format(schema, que.target.split('.')[1])  # 为postgresql添加schema
     select = _build_select(que.select_list, que.time_dict, sql_type)  # 字段这部分sql
     filters = _build_filter(que.where_list, que.time_dict, param_dic)  # 过滤条件
     group = _build_group(que.group_list, que.time_dict, sql_type)  # 分组
