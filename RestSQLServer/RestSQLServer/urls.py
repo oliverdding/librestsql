@@ -29,5 +29,4 @@ urlpatterns = [
     path('search', views.grafana_search),
     path('find_options', views.grafana_options),
     path('find_tables', views.grafana_tables),
-    # path('/annotations', views.),
 ]

@@ -8,28 +8,26 @@ if __name__ == '__main__':
         "from": "es_test.test_index",
         "time": {
             "column": "time",
-            "begin": "",
-            "end": "",
-            "interval": "1y"
+            "begin": "2001-07-20 02:34:23",
+            "end": "2021-07-30",
+            "interval": "1d"
         },
         "select": [
             {
-                "column": "price",
-                "alias": "",
-                "metric": "sum"
-            },
-            {
-                "column": "price",
-                "alias": "",
-                "metric": "max"
-            },
-            {
-                "column": "address.keyword",
-                "alias": "",
+                "column": "cityName.keyword",
+                "alias": "cityName_count",
                 "metric": "count"
             }
         ],
-        "group": ["cityName.keyword"]
+        "where": [
+            {
+                "column": "cityName",
+                "op": "contains",
+                "value": "a"
+            }
+        ],
+        "group": ["address.keyword", "name.keyword"],
+        "limit": 100
     }
 
     db_settings.add(
