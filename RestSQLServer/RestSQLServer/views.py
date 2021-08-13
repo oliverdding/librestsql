@@ -2,12 +2,13 @@ import json
 import sys
 import pandas as pd
 from django.http import HttpResponse, HttpResponseBadRequest
-from django.views.decorators.http import require_POST, require_GET
+from django.views.decorators.http import require_POST
 from restsql import rest_client
 from restsql.config.database import db_settings
 from restsql.config.logger import rest_logger
 from .config.exception import *
 from .config.load import table_map
+from RestSQLServer.RestSQLServer.query_manager import QueryManager
 from .utils import ResponseModel
 from .utils import frame_parse_obj, gen_restsql_query
 
@@ -70,6 +71,10 @@ def grafana_query(request):
     if request.body is None or request.body == "":
         rest_logger.logger.warning("request body is Empty")
         return HttpResponseBadRequest(ResponseModel.failure("error", "Please input the request query"))
+    # 权限控制检查
+    queryManager = QueryManager()
+    if not queryManager.query_check():
+        return HttpResponseBadRequest(ResponseModel.failure("error", "Access Denied"))
     try:
         rest_query = json.loads(request.body)
         rest_logger.logger.debug("query: {}".format(rest_query))
@@ -184,7 +189,10 @@ def api_query(request):
     """
     if request.body is None:
         return HttpResponseBadRequest(ResponseModel.failure('error', "Please input the request query"))
-
+    # 权限检查
+    queryManager = QueryManager()
+    if not queryManager.query_check():
+        return HttpResponseBadRequest(ResponseModel.failure("error", "Access Denied"))
     try:
         rest_query = json.loads(request.body)
         rest_logger.logger.debug("restapi query： {}".format(rest_query))

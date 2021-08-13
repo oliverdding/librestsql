@@ -155,8 +155,13 @@ class EsQuery:
         func_map = {'count': 'value_count', 'sum': 'sum', 'avg': 'avg', 'max': 'max', 'min': 'min',
                     'count distinct': 'cardinality'}
         for s in self.select_list:
-            if s["metric"] in func_map.keys():
-                self.dsl_aggs[s["alias"]] = {func_map[s["metric"]]: {'field': s["column"]}}
+            if s.get("metric") in func_map.keys():
+                alias = s.get("alias", "")
+                if alias == "":
+                    alias = s["column"]
+                    if s.get("metric", "") != "":
+                        alias = "{}({})".format(s["metric"], s["column"])
+                self.dsl_aggs[alias] = {func_map[s["metric"]]: {'field': s["column"]}}
             else:
                 if s.get("metric", "") == "":
                     continue
@@ -198,5 +203,5 @@ class EsQuery:
         self._parse_fields()
         self._parse_metric()
         rest_logger.logger.info(self.dsl)
-        # print(json.dumps(self.dsl))
+        print(json.dumps(self.dsl))
         return self.dsl

@@ -16,7 +16,7 @@ def _check_op(op):
     :return: None
     """
     # 合法的操作符
-    legal_op = ['=', '>', '>=', '<', '<=', 'in', 'IN', 'NOT IN', 'not in', 'LIKE', 'like',
+    legal_op = ['=', '>', '>=', '<', '<=', '!=', 'in', 'IN', 'NOT IN', 'not in', 'LIKE', 'like',
                 'startswith', 'endswith', 'contains']
     if op not in legal_op:
         raise RuntimeError('"{op}" op is not supported'.format(op=op))
@@ -29,9 +29,8 @@ def _check_metric(metric):
     :param metric: 聚合函数名
     :return: None
     """
-    legal_metric = ['', 'SUM', 'sum', 'AVG', 'avg', 'COUNT', 'count', 'MAX', 'max'
-                                                                             'MIN', 'min', 'COUNT DISTINCT',
-                    'count distinct']
+    legal_metric = ['', 'SUM', 'sum', 'AVG', 'avg', 'COUNT', 'count', 'MAX', 'max',
+                    'MIN', 'min', 'COUNT DISTINCT', 'count distinct']
     if metric not in legal_metric:
         raise RuntimeError('"{metric}" metric is not supported'.format(metric=metric))
 
@@ -93,9 +92,13 @@ def _check_time(que: Query):
     time_column = que.time_dict.get("column", "")
     if time_column != "":
         _check_column(time_column)
-        interval = que.time_dict.get("interval", " ")
+        interval = que.time_dict.get("interval", "1s")
         if interval[-1] not in rest_bucket or not interval[:-1].isdigit():
             raise RuntimeError('Interval "{}" is not supported'.format(interval))
+        if que.time_dict.get("begin", "") == "":
+            return
+        if que.time_dict.get("end", "") == "":
+            return
         _check_date(que.time_dict.get("begin", ""))
         _check_date(que.time_dict.get("end", ""))
 

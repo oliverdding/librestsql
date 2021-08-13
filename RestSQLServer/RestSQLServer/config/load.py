@@ -2,7 +2,7 @@
 import os
 import yaml
 
-from restsql.config.logger import Logger, rest_logger
+from restsql.config.logger import rest_logger
 from restsql.config.database import EnumDataBase, db_settings
 from restsql.config.table import NumberField, StringField, BoolField, IntField, TimeField, Table
 

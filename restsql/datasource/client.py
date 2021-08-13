@@ -81,7 +81,7 @@ class EsClient(Client):
         # 保存不进行聚合的字段和别名
         no_agg_field = []
         for s in que.select_list:
-            alias_dict[s["column"]] = s["alias"]
+            alias_dict[s["column"]] = s.get("alias", s["column"])
             if s.get("metric", "") == "":
                 if s.get("alias", "") == "":
                     s["alias"] = s["column"]

@@ -1,29 +1,17 @@
 tables:
-  - table_name: table1
-    fields:
-      username: StringField
-      password: IntField
   - table_name: wikipedia
     fields:
+      __time: TimeField
+      cityName: StringField
       comment: StringField
-      countryName: IntField
-  - table_name: table2
-    fields:
-      username: StringField
-      password: IntField
-  - table_name: model1_testuser
-    fields:
-      username: StringField
-      password: StringField
-      datetime: TimeField
+      commentLength: NumberField
+      channel: StringField
   - table_name: cars
     fields:
       make: StringField
-  - table_name: people
-    fields:
-      username: StringField
-      age: IntField
-      logintime: TimeField
+      color: StringField
+      price: NumberField
+      sold: TimeField
 db_settings:
 #  - name: pg_test
 #    tables:
