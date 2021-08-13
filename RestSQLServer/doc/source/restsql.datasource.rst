@@ -4,7 +4,7 @@ restsql.datasource package
 Submodules
 ----------
 
-restsql.datasource.client module
+client module
 --------------------------------
 
 .. automodule:: restsql.datasource.client
@@ -12,7 +12,7 @@ restsql.datasource.client module
    :undoc-members:
    :show-inheritance:
 
-restsql.datasource.es\_entry module
+es\_entry module
 -----------------------------------
 
 .. automodule:: restsql.datasource.es_entry
@@ -20,7 +20,7 @@ restsql.datasource.es\_entry module
    :undoc-members:
    :show-inheritance:
 
-restsql.datasource.sql\_entry module
+sql\_entry module
 ------------------------------------
 
 .. automodule:: restsql.datasource.sql_entry
@@ -28,10 +28,3 @@ restsql.datasource.sql\_entry module
    :undoc-members:
    :show-inheritance:
 
-Module contents
----------------
-
-.. automodule:: restsql.datasource
-   :members:
-   :undoc-members:
-   :show-inheritance:

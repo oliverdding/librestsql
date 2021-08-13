@@ -8,6 +8,7 @@ from restsql.query import Query
 def _pg_bucket(interval=None):
     """
     将RestSql格式的时间间隔转换成秒数返回给pg聚合使用
+
     :param interval: RestSql格式的时间间隔
     :return: 秒数
     """
@@ -24,6 +25,7 @@ def _pg_bucket(interval=None):
 def _druid_bucket(interval=None):
     """
     将RestSql格式的时间间隔转换成Druid支持的格式
+
     :param interval: RestSql格式的时间间隔
     :return: Druid支持的时间间隔格式
     """
@@ -38,7 +40,9 @@ def _druid_bucket(interval=None):
 def _build_bucket(sql_type, interval='1s'):
     """
     将RestSql格式的时间间隔转换成对应Sql类型的时间间隔
+
     比如1h转换成Druid中的PT1H，PG中的3600（PG全转换成秒数）
+
     :param interval: RestSql格式的时间间隔
     :param sql_type: 数据源类型
     :return: 对应Sql类型的时间间隔
@@ -57,6 +61,7 @@ def _build_bucket(sql_type, interval='1s'):
 def _build_select(select, time, sql_type):
     """
     完成SELECT这一部分的SQL代码转化
+
     :param select: 所需查询的所有字段的字典
     :param time: 包含时序处理信息的字典
     :return: SELECT这一部分的SQL代码
@@ -110,7 +115,9 @@ def _build_select(select, time, sql_type):
 def _build_filter(filters, time, param_dic):
     """
     完成WHERE这一部分的SQL代码转化（带占位符）， 以及完整对参数列表的处理
+
     例如 生成的SQL为 WHERE price > %(price)s AND type = %(type)s，参数列表param_dic为{'price':'100', 'type':'book'}
+
     :param filters: 所需过滤条件的列表
     :param time: 包含时序处理信息的字典
     :param param_dic: where中value构成的列表
@@ -135,9 +142,13 @@ def _build_filter(filters, time, param_dic):
 def _filter_handler(filter_dic, param_dic):
     """
     处理单个filter，将收到的字典里的信息提取出来，生成一个带占位符的表达式，并处理完value后添加到param_dic中
+
     druid的python驱动不支持使用例如 WHERE a > %s AND b > %s,['1', '2']这种格式化传参，而是使用字典方式格式化
+
     例如 '%(a)s, %(b)s' % {'a':'xx', 'b':'xx'},为了统一Druid和Postgre，这里均使用了字典，而每个的键为这个值插入的序号，
+
     例如 '%(0)s, %(1)s' % {'0':'xx', '1':'xx'},序号的生成方式为str(len(param_dic) - 1)
+
     :param filter_dic: 包含一个filter信息的字典
     :param param_dic: where中value构成的字典
     :return: 带占位符的表达式, 例如：price > %(p1)s
@@ -159,6 +170,7 @@ def _filter_handler(filter_dic, param_dic):
 def _build_group(group_list, time, sql_type):
     """
     完成GROUP这一部分SQL代码转化
+
     :param group_list: 需要分组的字段名列表
     :param time: 包含时序处理信息的字典
     :param sql_type: 需要生成的Sql类型，比如Druid或Postgresql
@@ -185,6 +197,7 @@ def _build_group(group_list, time, sql_type):
 def to_sql(que: Query, sql_type, schema=None):
     """
     把需要查询的内容转化为普通的SQL语句
+
     :param schema: schema对象,例如postgre里的public
     :param sql_type: 需要生成的Sql类型，比如Druid或Postgresql
     :param que: 包含查询所需信息的Query对象
@@ -211,6 +224,7 @@ def to_sql(que: Query, sql_type, schema=None):
 def get_columns(que: Query):
     """
     获取需要查询的所有字段名
+
     :param que: 包含查询信息的Query封装对象
     :return: 所有字段名构成的列表
     """

@@ -11,6 +11,9 @@ sys.path.append(BASE_DIR)
 
 
 class EnumDataBase:
+    """
+    数据源类型枚举类
+    """
     PG = 'PG'
     ES = 'ES'
     DRUID = 'DRUID'
@@ -18,13 +21,14 @@ class EnumDataBase:
 
 class DataBase:
     """
-    db_setting类。存储各个数据源的配置信息，用于连接、peewee查询。这里应该用builder模式但是py下的构造着模式有些奇怪，就改动了下。
+    db_setting类。以对象的形式存储各个数据源的配置信息。
     """
 
     def __init__(self, name, db_type, host, db_name=None, port=None, user=None, password=None, schema=None,
                  tables=None, black_tables=None, black_fields=None):
         """
         db_setting初始化器。
+
         :param name: 该配置数据源的名称
         :param db_type: 数据库类型。由EnumDataBase枚举类定义。
         :param host: 数据库host。
@@ -104,6 +108,7 @@ class _DbSettings:
     def get_all_name(self):
         """
         获取当前db_settings中所有db_setting的name的list
+
         :return: List of db_settings' name
         """
         return self._db_settings.keys()
@@ -111,6 +116,7 @@ class _DbSettings:
     def put(self, *db_setting_tuple):
         """
         向db_settings中直接添加db_setting实例
+
         :param db_setting_tuple: db_setting的可变参数列表
         :return: None
         """
@@ -123,6 +129,7 @@ class _DbSettings:
             tables=None, black_tables=None, black_fields=None):
         """
         向db_settings中添加新的db_setting类。
+
         :param name: 该db_setting的name。用于区分db_setting.
         :param db_type: 数据库类型。由EnumDataBase枚举类定义。
         :param host: 数据库host。

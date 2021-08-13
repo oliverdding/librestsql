@@ -4,7 +4,7 @@ RestSQLServer.RestSQLServer.config package
 Submodules
 ----------
 
-RestSQLServer.RestSQLServer.config.exception module
+exception module
 ---------------------------------------------------
 
 .. automodule:: RestSQLServer.RestSQLServer.config.exception
@@ -12,7 +12,7 @@ RestSQLServer.RestSQLServer.config.exception module
    :undoc-members:
    :show-inheritance:
 
-RestSQLServer.RestSQLServer.config.load module
+load module
 ----------------------------------------------
 
 .. automodule:: RestSQLServer.RestSQLServer.config.load
@@ -20,10 +20,3 @@ RestSQLServer.RestSQLServer.config.load module
    :undoc-members:
    :show-inheritance:
 
-Module contents
----------------
-
-.. automodule:: RestSQLServer.RestSQLServer.config
-   :members:
-   :undoc-members:
-   :show-inheritance:

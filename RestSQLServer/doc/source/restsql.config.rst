@@ -4,7 +4,7 @@ restsql.config package
 Submodules
 ----------
 
-restsql.config.database module
+database module
 ------------------------------
 
 .. automodule:: restsql.config.database
@@ -12,7 +12,7 @@ restsql.config.database module
    :undoc-members:
    :show-inheritance:
 
-restsql.config.logger module
+logger module
 ----------------------------
 
 .. automodule:: restsql.config.logger
@@ -20,7 +20,7 @@ restsql.config.logger module
    :undoc-members:
    :show-inheritance:
 
-restsql.config.table module
+table module
 ---------------------------
 
 .. automodule:: restsql.config.table
@@ -28,10 +28,3 @@ restsql.config.table module
    :undoc-members:
    :show-inheritance:
 
-Module contents
----------------
-
-.. automodule:: restsql.config
-   :members:
-   :undoc-members:
-   :show-inheritance:

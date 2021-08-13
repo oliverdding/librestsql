@@ -2,6 +2,9 @@
 
 
 class Field(object):
+    """
+    表字段类型定义基类
+    """
     pass
 
 

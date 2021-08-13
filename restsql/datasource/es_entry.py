@@ -58,6 +58,7 @@ class EsQuery:
     def _parse_where(self):
         """
         过滤操作暂时仅支持了and
+
         :return:DSL中加入where筛选条件以及time字段的范围筛选
         """
         for filter_dic in self.where_list:
@@ -188,6 +189,7 @@ class EsQuery:
     def parse(self):
         """
         EsClient类调用的接口
+
         :return: 完整的DSL语句
         """
         self.dsl["size"] = self.limit

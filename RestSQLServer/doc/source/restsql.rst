@@ -13,7 +13,7 @@ Subpackages
 Submodules
 ----------
 
-restsql.check module
+check module
 --------------------
 
 .. automodule:: restsql.check
@@ -21,7 +21,7 @@ restsql.check module
    :undoc-members:
    :show-inheritance:
 
-restsql.query module
+query module
 --------------------
 
 .. automodule:: restsql.query
@@ -29,7 +29,7 @@ restsql.query module
    :undoc-members:
    :show-inheritance:
 
-restsql.rest\_client module
+rest\_client module
 ---------------------------
 
 .. automodule:: restsql.rest_client

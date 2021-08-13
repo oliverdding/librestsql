@@ -19,8 +19,8 @@ sys.path.insert(0, os.path.abspath(r'E:\f1ed-restsql-librestsql-master'))
 # -- Project information -----------------------------------------------------
 
 project = 'RestSQL'
-copyright = '2021, zhang'
-author = 'zhang'
+copyright = '2021, zhang,li,shen,niu'
+author = 'zhang/li/shen/niu'
 
 # -- General configuration ---------------------------------------------------
 

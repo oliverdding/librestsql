@@ -1,4 +1,4 @@
-RestSQLServer.RestSQLServer package
+RestSQLServer package
 ===================================
 
 Subpackages
@@ -12,7 +12,7 @@ Subpackages
 Submodules
 ----------
 
-RestSQLServer.RestSQLServer.utils module
+utils module
 ----------------------------------------
 
 .. automodule:: RestSQLServer.RestSQLServer.utils
@@ -20,7 +20,7 @@ RestSQLServer.RestSQLServer.utils module
    :undoc-members:
    :show-inheritance:
 
-RestSQLServer.RestSQLServer.views module
+views module
 ----------------------------------------
 
 .. automodule:: RestSQLServer.RestSQLServer.views
@@ -28,10 +28,3 @@ RestSQLServer.RestSQLServer.views module
    :undoc-members:
    :show-inheritance:
 
-Module contents
----------------
-
-.. automodule:: RestSQLServer.RestSQLServer
-   :members:
-   :undoc-members:
-   :show-inheritance:

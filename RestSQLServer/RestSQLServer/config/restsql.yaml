@@ -19,6 +19,11 @@ tables:
   - table_name: cars
     fields:
       make: StringField
+  - table_name: people
+    fields:
+      username: StringField
+      age: IntField
+      logintime: TimeField
 db_settings:
 #  - name: pg_test
 #    tables:
@@ -57,3 +62,16 @@ db_settings:
       blacktable_1:
         - test1
         - test2
+  - name: pg_test
+    tables:
+      - people
+    db_type: PG
+    host: localhost
+    port: "5432"
+    user: postgres
+    db_name: testdjango
+    password: zhang23785491
+    schema: public
+
+
+

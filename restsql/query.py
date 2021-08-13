@@ -7,8 +7,13 @@ __all__ = ['Query']
 
 
 class Query:
+    """
+    数据库查询基类
+    """
     def __init__(self, query_dict):
         """
+        数据库查询服务基类
+
         :param query_dict: 将请求协议字典封装为类，并将协议缺失部分置空
         """
         self.target = query_dict.get("from", "")

@@ -15,19 +15,19 @@ sys.path.extend([r'E:\f1ed-restsql-librestsql-master'])
 
 
 def test(request):
+    """
+    测试该接口服务是否能够联通
+    """
     return HttpResponse('ok')
 
 
 def grafana_search(request):
     """
-       查询variable接口
-       request:
-       {
-           'target': '...' # example: {"select": "color", "from": "cars"}
-       }
-       response:
-           ['...', ...]
-       """
+    grafana 查询variable接口
+
+    :param request: {'target': '...' # example: {"select": "color", "from": "cars"} }
+    :return: ['...', ...]
+    """
     rest_logger.logger.info("/search request")
     data = json.loads(request.body)
     target = data.get('target')
@@ -61,7 +61,8 @@ def grafana_search(request):
 
 def grafana_query(request):
     """
-    前端采用异步方式请求,只需要返回单次查询结果而无需以数组方式返回多次查询的结果
+    grafana采用异步方式请求,只需要返回单次查询结果而无需以数组方式返回多次查询的结果
+
     :param request: 请求对象
     :return: grafana指定的DataFrame格式
     """
@@ -109,19 +110,11 @@ def grafana_query(request):
 
 
 def grafana_tables(request):
+    """查询指定的数据源，返回可用的表名列表
+
+    :param request: 传输的http对象
+    :return: {"status": ok/error,"data": 返回表名列表}
     """
-      查询可选表的接口
-      response:
-      {
-          'status': 'ok',
-          'data': ['...', ...]
-      }
-      Args:
-          request: 传输的http对象
-      Returns:
-          status: ok/error
-          data: 返回表名列表
-      """
     try:
         resp = json.dumps({
             'status': 'ok',
@@ -129,19 +122,16 @@ def grafana_tables(request):
         })
     except Exception as e:
         rest_logger.logger.exception(e)
-        return HttpResponseBadRequest(ResponseModel.failure("error", e.message))
+        return HttpResponseBadRequest(ResponseModel.failure("error", e.args[0]))
     return HttpResponse(resp)
 
 
 def grafana_options(request):
     """
-      查询表字段接口
-      request:
-          {
-              'tableName': '...'<String>
-          }
-      response:
-          ['...', ...]
+        接收grafana查询表名，返回该数据表可用字段
+
+        :param request: {'tableName': '...'<String>}
+        :return: 可用字段列表['...', ...]
     """
     if request.body is None or request.body == "":
         rest_logger.logger.warning("request body is empty")
@@ -187,8 +177,10 @@ def grafana_options(request):
 @require_POST
 def api_query(request):
     """
-    :param request: 获取请求需要的query,以及而外的参数，如format,额外希望返回的格式
-    :return 默认返回json格式结构数据，除非使用format参数指令其他的返回类型
+    restsql api服务请求处理方法
+
+    :param request: 获取restsql查询的query,以及额外的参数，如format,希望返回的数据格式，如html,txt,json等
+    :return: 默认返回json格式结构数据，除非使用format参数指令其他的返回类型
     """
     if request.body is None:
         return HttpResponseBadRequest(ResponseModel.failure('error', "Please input the request query"))
@@ -205,14 +197,16 @@ def api_query(request):
     try:
         client = rest_client.RestClient(rest_query)
         result = client.query()
-    except RestSqlExceptionBase as e:
-        return HttpResponse(ResponseModel.failure("error", "The query failed，the error message: {}".format(e.message)))
+    except Exception as e:
+        return HttpResponse(ResponseModel.failure("error", "The query failed，the error message: {}".format(e.args[0])))
     resp = frame_parse_obj(result, return_format)  # 如果是不指明以txt,或者html格式的，在内部进行转json返回
     return HttpResponse(resp)
 
 
 def table_query(request):
     """
+    返回请求表的结构列表
+
     :param request: 获取需要查询表的database
     :return: 返回json格式的表结构列表
     """
@@ -227,27 +221,18 @@ def table_query(request):
             resp = ResponseModel.success(table_dict)  # 内置转json
         except Exception as e:
             rest_logger.logger.exception(e)
-            return HttpResponseBadRequest(ResponseModel.failure(e.code, "parse table_dict to json error"))
+            return HttpResponseBadRequest(ResponseModel.failure("error", "parse table_dict to json error"))
         return HttpResponse(resp)
     else:
         return HttpResponseBadRequest(ResponseModel.failure("400", "Incorrect request method"))
 
 
 def database_query(request):
-    # """
-    # :return:返回json格式的数据源名列表
-    # """
-    """函数功能.
+    """
+    返回给grafana可用数据源名称列表
 
-            函数功能说明.
-
-            Args:
-                arg1 (int): arg1的参数说明
-                arg2 (str): arg2的参数说明
-
-            Returns:
-                bool: 返回值说明
-
+    :param request: http请求对象
+    :return: 返回json格式的数据源名列表
     """
     if request.method == "GET":
         databases = []
@@ -257,7 +242,7 @@ def database_query(request):
             resp = json.dumps(ResponseModel.success(databases))
         except Exception as e:
             rest_logger.logger.exception(e)
-            return HttpResponseBadRequest(ResponseModel.failure(e.code, "parse table_dict to json error"))
+            return HttpResponseBadRequest(ResponseModel.failure("error", "parse table_dict to json error"))
         return HttpResponse(resp)
     else:
         return HttpResponseBadRequest(ResponseModel.failure("400", "Incorrect request method"))

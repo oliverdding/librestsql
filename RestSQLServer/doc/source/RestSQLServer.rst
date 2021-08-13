@@ -5,25 +5,6 @@ Subpackages
 -----------
 
 .. toctree::
-   :maxdepth: 4
+   :maxdepth: 10
 
    RestSQLServer.RestSQLServer
-
-Submodules
-----------
-
-RestSQLServer.manage module
----------------------------
-
-.. automodule:: RestSQLServer.manage
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-Module contents
----------------
-
-.. automodule:: RestSQLServer
-   :members:
-   :undoc-members:
-   :show-inheritance:
