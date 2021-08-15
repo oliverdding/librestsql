@@ -40,7 +40,7 @@ class DruidClient(Client):
             curs = conn.cursor()
             curs.execute(sql, param_dic)
         except CompileError as e:
-            raise e
+            raise RuntimeError(str(e).split('\n')[0])
         res = curs.fetchall()
         curs.close()
         columns = get_columns(que)
@@ -64,7 +64,7 @@ class PgClient(Client):
         except psycopg2.Error as e:
             # 若查询过程中出现问题，则重新建立连接，并抛出错误
             self.database.re_connect()
-            raise e
+            raise RuntimeError(str(e).split('\n')[0])
         # 以dataFrame格式返回
         res = pd.DataFrame(data=rows, columns=columns)
         return res
