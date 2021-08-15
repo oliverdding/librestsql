@@ -6,42 +6,33 @@ tables:
       comment: StringField
       commentLength: NumberField
       channel: StringField
-  - table_name: cars
+  - table_name: users
     fields:
-      make: StringField
-      color: StringField
-      price: NumberField
-      sold: TimeField
+      id:
+      login_Time:
+      name:
+      gender:
+      age:
+      cityName:
+  - table_name: student
+    fields:
+      id:
+      name:
+      age:
+      logintime:
 db_settings:
-#  - name: pg_test
-#    tables:
-#      - sale
-#    db_type: PG
-#    host: localhost
-#    port: '5432'
-#    user: postgres
-#    password: '12345'
-#    db_name: test
-#    black_tables: []
-#    black_fields:
-#      sale: ['']
-  - name: RestSQL
+  - name: druid_test
     tables:
       - wikipedia
     db_type: DRUID
     host: localhost
     port: '8888'
     user: postgres
-    password: '12345'
-    db_name: test
     black_tables: []
     black_fields:
-      blacktable_1:
-        - test1
-        - test2
   - name: es_test
     tables:
-      - cars
+      - users
     db_type: ES
     host: localhost
     port: "9200"
@@ -52,13 +43,13 @@ db_settings:
         - test2
   - name: pg_test
     tables:
-      - people
+      - student
     db_type: PG
     host: localhost
     port: "5432"
     user: postgres
-    db_name: testdjango
-    password: zhang23785491
+    db_name: pg_test
+    password: LIXIN123
     schema: public
 
 

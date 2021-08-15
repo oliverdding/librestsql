@@ -14,7 +14,7 @@ import os
 import sys
 
 # sys.path.append(r'E:\f1ed-restsql-librestsql-master\RestSQLServer')
-sys.path.insert(0, os.path.abspath(r'E:\f1ed-restsql-librestsql-master'))
+sys.path.insert(0, os.path.abspath(r'D:\PycharmProjects\librestsql'))
 
 # -- Project information -----------------------------------------------------
 

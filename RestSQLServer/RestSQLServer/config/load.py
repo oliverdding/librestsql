@@ -51,7 +51,10 @@ def init_yaml(path):
         table_name = table_config.get("table_name")
         fields = {}
         for (k, v) in table_config.get("fields").items():
-            if v == "IntField":
+            if v is None:
+                # 暂时可以不输入字段类型
+                fields[k] = None
+            elif v == "IntField":
                 fields[k] = IntField()
             elif v == "StringField":
                 fields[k] = StringField()

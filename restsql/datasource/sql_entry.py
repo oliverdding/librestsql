@@ -189,7 +189,7 @@ def _build_group(group_list, time, sql_type):
     elif sql_type == EnumDataBase.PG:
         # 若存在时序字段，则将时序字段放在第一个GROUP
         if time and 'column' in time and len(time['column']) > 0:
-            res_list.append('"{}"'.format(time['column']))
+            res_list.append('"time"')
         res_list.extend(['"{}"'.format(i) for i in group_list])
     return 'GROUP BY {} '.format(','.join(res_list))
 

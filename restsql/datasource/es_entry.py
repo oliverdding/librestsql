@@ -203,5 +203,4 @@ class EsQuery:
         self._parse_fields()
         self._parse_metric()
         rest_logger.logger.info(self.dsl)
-        print(json.dumps(self.dsl))
         return self.dsl

@@ -90,8 +90,8 @@ class EsClient(Client):
             alias_dict[que.time_dict["column"]] = "time"
 
         results = []
-        esQuery = EsQuery(que)
         index = que.target.split(".")[1]
+        esQuery = EsQuery(que,)
         dsl = esQuery.parse()
         raw_result = self.database.conn.search(index=index, body=dsl)
         # 根据聚合与否,从两个地方进行遍历取值

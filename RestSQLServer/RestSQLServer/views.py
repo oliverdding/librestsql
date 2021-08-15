@@ -8,7 +8,7 @@ from restsql.config.database import db_settings
 from restsql.config.logger import rest_logger
 from .config.exception import *
 from .config.load import table_map
-from RestSQLServer.RestSQLServer.query_manager import QueryManager
+from .query_manager import QueryManager
 from .utils import ResponseModel
 from .utils import frame_parse_obj, gen_restsql_query
 
@@ -72,7 +72,7 @@ def grafana_query(request):
         rest_logger.logger.warning("request body is Empty")
         return HttpResponseBadRequest(ResponseModel.failure("error", "Please input the request query"))
     # 权限控制检查
-    queryManager = QueryManager()
+    queryManager = QueryManager(request.body)
     if not queryManager.query_check():
         return HttpResponseBadRequest(ResponseModel.failure("error", "Access Denied"))
     try:
@@ -100,7 +100,8 @@ def grafana_query(request):
     for column in result.columns:
         if column == "time":
             result["time"] = pd.to_datetime(result["time"])
-            fieldDTO = {"name": column, "values": [int(t) // 10 ** 6 - timeShift for t in result[column].values], "type": "time"}
+            fieldDTO = {"name": column, "values": [int(t) // 10 ** 6 - timeShift for t in result[column].values],
+                        "type": "time"}
         else:
             fieldDTO = {"name": column, "values": result[column].values.tolist()}
         resp["fields"].append(fieldDTO)
@@ -190,7 +191,7 @@ def api_query(request):
     if request.body is None:
         return HttpResponseBadRequest(ResponseModel.failure('error', "Please input the request query"))
     # 权限检查
-    queryManager = QueryManager()
+    queryManager = QueryManager(request.body)
     if not queryManager.query_check():
         return HttpResponseBadRequest(ResponseModel.failure("error", "Access Denied"))
     try:
@@ -220,7 +221,7 @@ def table_query(request):
     """
     if request.method == "GET":
         database_name = request.GET.get("database")
-        database = db_settings.get_by_dbname(database_name)
+        database = db_settings.get_by_name(database_name)
         table_dict = {}
         for t in database.tables:
             table_dict[getattr(t, 'table_name')] = list(
@@ -247,10 +248,10 @@ def database_query(request):
         for k in db_settings.get_all_name():
             databases.append(k)
         try:
-            resp = json.dumps(ResponseModel.success(databases))
+            resp = ResponseModel.success(databases)
         except Exception as e:
             rest_logger.logger.exception(e)
             return HttpResponseBadRequest(ResponseModel.failure("error", "parse table_dict to json error"))
-        return HttpResponse(resp)
+        return HttpResponse(content=resp, content_type="application/json")
     else:
         return HttpResponseBadRequest(ResponseModel.failure("400", "Incorrect request method"))

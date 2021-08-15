@@ -25,7 +25,7 @@ def frame_parse_obj(df, key='json'):
         return df.to_latex()
     elif key == 'txt':
         return df.to_string()
-    return ResponseModel.success(df.to_json(orient="columns", force_ascii=False))  # 默认是json，其他的形式不转化
+    return df.to_json(orient="columns", force_ascii=False)  # 默认是json，其他的形式不转化
 
 
 def gen_restsql_query(target):
