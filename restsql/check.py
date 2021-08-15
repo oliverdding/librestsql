@@ -125,7 +125,7 @@ def check(que: Query, database: DataBase):
         for k, v in s.items():
             if k == 'metric':
                 _check_metric(v)
-            if k == 'column':
+            if k in ['column', 'alias']:
                 _check_column(v)
 
     # 检查WHERE中字段是否符合规范
