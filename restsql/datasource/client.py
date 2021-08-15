@@ -3,6 +3,7 @@
 from restsql.config.database import EnumDataBase
 from restsql.datasource.sql_entry import to_sql, get_columns
 from sqlalchemy.exc import CompileError
+from pydruid.db.exceptions import Error
 from restsql.datasource.es_entry import EsQuery
 import psycopg2
 import pandas as pd
@@ -40,7 +41,10 @@ class DruidClient(Client):
             curs = conn.cursor()
             curs.execute(sql, param_dic)
         except CompileError as e:
+            print(e)
             raise RuntimeError(str(e).split('\n')[0])
+        except Error as e:
+            raise RuntimeError(str(e).split(':')[-1])
         res = curs.fetchall()
         curs.close()
         columns = get_columns(que)
@@ -62,12 +66,18 @@ class PgClient(Client):
                 cursor.execute(sql, param_dic)
                 rows = cursor.fetchall()
         except psycopg2.Error as e:
-            # 若查询过程中出现问题，则重新建立连接，并抛出错误
-            self.database.re_connect()
+            # 若查询过程中出现问题，则回滚
+            conn.rollback()
+            # 回滚后尝试一次简单查询，若出错则重新连接
+            try:
+                with conn.cursor() as cursor:
+                    cursor.execute('SELECT 1')
+            except psycopg2.Error:
+                # 若查询过程中出现问题，则重新建立连接，并抛出错误
+                self.database.re_connect()
             raise RuntimeError(str(e).split('\n')[0])
         # 以dataFrame格式返回
-        res = pd.DataFrame(data=rows, columns=columns)
-        return res
+        return pd.DataFrame(data=rows, columns=columns)
 
 
 class EsClient(Client):
