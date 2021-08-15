@@ -47,11 +47,6 @@ def _build_bucket(sql_type, interval='1s'):
     :param sql_type: 数据源类型
     :return: 对应Sql类型的时间间隔
     """
-    # 支持的时间单位，分别对应年月周日时分秒
-    rest_bucket = ['y', 'M', 'w', 'd', 'h', 'm', 's']
-    # 若格式不正确抛出异常
-    if interval[-1] not in rest_bucket or not interval[:-1].isdigit():
-        raise RuntimeError('Interval "{}" is not supported'.format(interval))
     if sql_type == EnumDataBase.PG:
         return "'{}'".format(_pg_bucket(interval))
     elif sql_type == EnumDataBase.DRUID:
