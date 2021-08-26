@@ -6,10 +6,7 @@ from restsql.config.logger import rest_logger
 from restsql.config.database import EnumDataBase, db_settings
 from restsql.config.table import NumberField, StringField, BoolField, IntField, TimeField, Table
 
-__all__ = ['init_yaml', "CONF_RESTSQL_PATH", "init_logger", "CONF_LOGGER_PATH", "table_map"]
-curPath = os.path.dirname(os.path.realpath(__file__))
-CONF_RESTSQL_PATH = os.getenv("CONF_RESTSQL_PATH", curPath + os.sep + "restsql.yaml")  # 导入配置文件路径
-CONF_LOGGER_PATH = os.getenv("CONF_LOGGER_PATH", curPath + os.sep + "restsql.log")  # 设置文件日志路径，由manage.py导入
+__all__ = ['init_config', "init_logger", "table_map"]
 
 table_map = {}
 """
@@ -39,7 +36,7 @@ def get_db_type(db_type):
         raise Exception("载入数据源配置出错: 无法识别数据库类型: {}".format(db_type))
 
 
-def init_yaml(path):
+def init_config(path):
     """
     从yaml配置文件中读取数据源配置信息，并封装到类对象中
 

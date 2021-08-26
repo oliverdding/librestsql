@@ -5,6 +5,7 @@ import time
 
 __all__ = ["Logger", "rest_logger"]
 
+
 class Logger:
     """
     日志模块处理配置类

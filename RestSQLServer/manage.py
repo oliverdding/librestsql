@@ -3,8 +3,12 @@
 import os
 import sys
 
-sys.path.extend([r'E:\f1ed-restsql-librestsql-master'])  # 这一句引入不要去掉，才能获取到restsql位置，后续处理，使用环境变量传入
-from RestSQLServer.config.load import init_yaml, init_logger, CONF_RESTSQL_PATH, CONF_LOGGER_PATH
+RESTSQL_ROOT_PATH = os.getenv("RESTSQL_ROOT_PATH", "/opt/librestsql")  # project's root path
+CONF_RESTSQL_PATH = os.getenv("CONF_RESTSQL_PATH", "/etc/restsql/config.yaml")  # config's path
+CONF_LOGGER_PATH = os.getenv("CONF_LOGGER_PATH", "/tmp/restsql.log")  # logging's path
+
+sys.path.extend([sys.path[0]])  # extend current path to pythonpath
+from RestSQLServer.config.load import init_config, init_logger
 
 
 def main():
@@ -21,6 +25,6 @@ def main():
 
 
 if __name__ == '__main__':
-    init_yaml(CONF_RESTSQL_PATH)
+    init_config(CONF_RESTSQL_PATH)
     init_logger(CONF_LOGGER_PATH)
     main()

@@ -1,0 +1,30 @@
+# https://registry.hub.docker.com/r/bitnami/kafka
+version: "2"
+
+services:
+  postgresql:
+    image: 'bitnami/postgresql:latest'
+    ports:
+      - "5432:5432"
+    volumes:
+      - "postgresql_data:/bitnami/postgresql"
+    environment:
+      - POSTGRESQL_USERNAME=restsql
+      - POSTGRESQL_PASSWORD=restsql
+      - POSTGRESQL_DATABASE=restsql
+  elasticsearch:
+    image: 'bitnami/elasticsearch:latest'
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    volumes:
+      - "elasticsearch_data:/bitnami/elasticsearch/data"
+    environment:
+      - ELASTICSEARCH_CLUSTER_NAME=restsql-elastic-cluster
+      - ELASTICSEARCH_NODE_NAME=restsql-1
+
+volumes:
+  postgresql_data:
+    driver: local
+  elasticsearch_data:
+    driver: local
